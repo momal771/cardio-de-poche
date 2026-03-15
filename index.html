@@ -2429,6 +2429,7 @@ function renderFiches() {
   var p = [];
   p.push('<div class="page fiches-page">');
   p.push('<div class="header">');
+  p.push('<button id="homeBtnFiches" style="background:linear-gradient(135deg,#ff4060,#cc2040);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-family:inherit;cursor:pointer;border:none;font-weight:700;margin-bottom:16px;">⌂ Accueil</button>');
   p.push('<div class="header-sub">◈ FICHES CLINIQUES ◈</div>');
   p.push('<h1 style="font-size:32px">Référence</h1>');
   p.push('<div class="header-cats">Rythmo · Ischémie · Traitements · IC · HTA</div>');
@@ -2454,6 +2455,7 @@ function renderFiches() {
     // Back button + title
     p.push('<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">');
     p.push('<button class="back-fiche-btn" id="backFicheBtn">← Retour</button>');
+    p.push('<button id="homeBtnFiches" style="background:transparent;border:1px solid #ff406044;color:#ff4060;padding:6px 14px;border-radius:20px;font-size:12px;font-family:inherit;cursor:pointer;">⌂ Accueil</button>');
     p.push('<div style="font-size:20px;font-weight:900;color:'+fiche.couleur+'">'+fiche.icon+' '+fiche.titre+'</div>');
     p.push('</div>');
 
@@ -2492,6 +2494,8 @@ function renderFiches() {
 }
 
 function bindFichesEvents() {
+  var hbf = document.getElementById('homeBtnFiches');
+  if(hbf) hbf.onclick = function(){ ficheState.activeFiche=null; state.screen='home'; render(); };
   document.querySelectorAll('.fiche-card').forEach(function(btn) {
     btn.onclick = function() {
       ficheState.activeFiche = btn.dataset.fiche;
@@ -2994,6 +2998,8 @@ function bindEvents() {
   if(el) el.onclick = function(){ state.screen='home'; render(); };
   el = document.getElementById('replayBtn');
   if(el) el.onclick = startQuiz;
+  el = document.getElementById('homeBtnFiches');
+  if(el) el.onclick = function(){ ficheState.activeFiche=null; state.screen='home'; render(); };
   el = document.getElementById('fichesHomeBtn');
   if(el) el.onclick = function(){ ficheState.activeFiche=null; state.screen='fiches'; render(); };
   el = document.getElementById('resetBtn');
