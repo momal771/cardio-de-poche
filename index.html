@@ -1,0 +1,3111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ECG Trainer">
+  <meta name="theme-color" content="#06101c">
+  <title>ECG Trainer</title>
+  <style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin:0; padding:0; background:#06101c; color:#d0e8ff; font-family:'Courier New',Courier,monospace; min-height:100vh; overscroll-behavior:none; }
+#app { min-height:100vh; }
+.page { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 16px; }
+.header { text-align:center; margin-bottom:18px; }
+.header-sub { font-size:9px; letter-spacing:8px; color:#00c8f8; margin-bottom:6px; }
+h1 { font-size:44px; font-weight:900; margin:0; letter-spacing:-2px; background:linear-gradient(120deg,#d0e8ff 30%,#00c8f8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header-cats { font-size:10px; color:#4a6888; margin-top:4px; }
+.ecg-banner { width:100%; max-width:580px; margin-bottom:18px; }
+.tabs { display:flex; gap:2px; margin-bottom:20px; background:#091522; padding:3px; border-radius:12px; border:1px solid #122030; }
+.tab-btn { padding:7px 20px; border-radius:9px; font-family:inherit; cursor:pointer; font-size:11px; border:none; background:transparent; color:#4a6888; transition:all 0.2s; }
+.tab-btn.active { background:#00c8f822; color:#00c8f8; font-weight:700; }
+.sr-summary { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; justify-content:center; }
+.stat-card { background:#091522; border:1px solid #33333322; border-radius:12px; padding:10px 14px; text-align:center; min-width:68px; }
+.stat-n { font-size:22px; font-weight:900; }
+.stat-label { font-size:8px; color:#4a6888; margin-top:2px; }
+.mode-row { display:flex; gap:8px; margin-bottom:16px; align-items:center; flex-wrap:wrap; justify-content:center; }
+.mode-btn { padding:6px 16px; border-radius:20px; font-family:inherit; cursor:pointer; font-size:10px; border:1px solid #4a6888; background:transparent; color:#4a6888; }
+.mode-btn.active { border-color:#00c8f8; background:#00c8f822; color:#00c8f8; }
+.due-badge { font-size:10px; color:#ff3356; }
+.filters { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; justify-content:center; }
+.filter-btn { padding:6px 14px; border-radius:20px; font-family:inherit; cursor:pointer; font-size:10px; border:1px solid #122030; background:transparent; color:#4a6888; }
+.start-btn { padding:14px 48px; background:linear-gradient(130deg,#00c8f8,#0060cc); border:none; border-radius:30px; color:#000; font-weight:900; font-size:14px; letter-spacing:2px; cursor:pointer; text-transform:uppercase; font-family:inherit; box-shadow:0 0 40px #00c8f844; margin-bottom:22px; }
+.start-btn:disabled { background:#333; box-shadow:none; cursor:not-allowed; }
+.case-grid-wrap { width:100%; max-width:620px; }
+.section-label { font-size:9px; letter-spacing:3px; color:#4a6888; margin-bottom:8px; text-align:center; }
+.case-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:5px; max-height:280px; overflow-y:auto; padding-right:4px; }
+.case-card { padding:7px 10px; background:#091522; border-radius:8px; border:1px solid #12203022; }
+.case-title { font-size:10px; color:#d0e8ff; font-weight:700; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.case-meta { display:flex; gap:4px; align-items:center; justify-content:space-between; }
+.diff-badge { font-size:8px; padding:1px 6px; border-radius:8px; }
+.stats-page { width:100%; max-width:560px; }
+.global-stats { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-bottom:16px; }
+.global-stat { text-align:center; }
+.global-pct { font-size:34px; font-weight:900; }
+.global-label { font-size:9px; color:#4a6888; }
+.progress-bar { height:8px; background:#122030; border-radius:4px; overflow:hidden; }
+.cat-stat-card { background:#091522; border:1px solid #33333322; border-radius:12px; padding:14px 16px; margin-bottom:8px; }
+.cat-stat-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.cat-stat-left { display:flex; align-items:center; gap:8px; }
+.weak-card { display:flex; align-items:center; gap:10px; padding:8px 12px; background:#091522; border-radius:8px; margin-bottom:5px; border:1px solid #ff335622; }
+.pct-circle { width:30px; height:30px; border-radius:50%; border:2px solid #ff3356; display:flex; align-items:center; justify-content:center; font-size:9px; color:#ff3356; flex-shrink:0; }
+.reset-btn { padding:7px 18px; background:transparent; border:1px solid #4a688844; border-radius:18px; color:#4a6888; cursor:pointer; font-family:inherit; font-size:10px; }
+.quiz-page { padding:0; }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:11px 18px; border-bottom:1px solid #122030; background:#091522; flex-shrink:0; width:100%; }
+.topbar-title { font-size:9px; letter-spacing:3px; color:#00c8f8; }
+.back-btn { background:none; border:none; color:#4a6888; cursor:pointer; font-family:inherit; font-size:11px; }
+.progress-track { height:3px; background:#122030; flex-shrink:0; width:100%; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#00c8f8,#00f090); transition:width 0.5s; }
+.quiz-scroll { flex:1; overflow-y:auto; padding:14px 16px; max-width:680px; margin:0 auto; width:100%; }
+.badges-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.badge { font-size:9px; padding:3px 10px; border-radius:20px; letter-spacing:1px; }
+.ecg-box { background:#091522; border:1px solid #122030; border-radius:12px; padding:10px 6px 6px; margin-bottom:14px; position:relative; }
+.ecg-label { position:absolute; top:8px; right:12px; font-size:8px; color:#00f09088; letter-spacing:2px; }
+.strip-row { display:flex; align-items:center; }
+.lead-label { width:32px; font-size:10px; color:#00c8f8; text-align:right; padding-right:8px; flex-shrink:0; font-weight:700; }
+.strip-svg { flex:1; display:block; height:80px; }
+.question { font-size:13px; font-weight:700; margin-bottom:12px; }
+.opts { display:grid; gap:8px; margin-bottom:12px; }
+.opt-btn { padding:11px 14px; border-radius:10px; cursor:pointer; text-align:left; font-size:12px; font-family:inherit; transition:all 0.2s; display:flex; align-items:center; gap:10px; width:100%; }
+.opt-letter { width:20px; height:20px; border-radius:50%; border:1px solid currentColor; display:flex; align-items:center; justify-content:center; font-size:9px; flex-shrink:0; opacity:0.7; }
+.action-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.hint-btn { padding:6px 12px; background:transparent; border:1px solid #ffc84044; border-radius:20px; color:#ffc840; cursor:pointer; font-size:10px; font-family:inherit; }
+.keys-btn { padding:6px 12px; background:transparent; border:1px solid #00c8f844; border-radius:20px; color:#00c8f8; cursor:pointer; font-size:10px; font-family:inherit; }
+.hint-box { padding:11px 14px; background:#ffc8400d; border:1px solid #ffc84044; border-radius:10px; font-size:11px; color:#ffc840; margin-bottom:10px; line-height:1.7; }
+.result-box { padding:12px 14px; border:1px solid; border-radius:10px; margin-bottom:10px; }
+.keys-box { padding:11px 14px; background:#00c8f815; border:1px solid #00c8f844; border-radius:10px; margin-bottom:10px; }
+.key-item { font-size:11px; color:#d0e8ff; margin-bottom:5px; display:flex; gap:8px; line-height:1.5; }
+.next-btn { width:100%; padding:13px; background:linear-gradient(130deg,#00c8f8,#0060cc); border:none; border-radius:12px; color:#000; font-weight:900; font-size:13px; cursor:pointer; font-family:inherit; letter-spacing:1px; margin-bottom:16px; }
+.result-page { text-align:center; }
+.mini-stat { background:#091522; border:1px solid; border-radius:10px; padding:8px 16px; text-align:center; }
+.history-list { width:100%; max-width:520px; max-height:45vh; overflow-y:auto; margin-bottom:22px; }
+.history-item { display:flex; align-items:center; gap:10px; padding:9px 14px; background:#091522; border-radius:8px; margin-bottom:5px; border:1px solid; }
+.btn-outline-accent { padding:11px 20px; background:transparent; border:1px solid #00c8f844; border-radius:22px; color:#00c8f8; cursor:pointer; font-family:inherit; font-size:11px; }
+.btn-outline-dim { padding:11px 20px; background:transparent; border:1px solid #122030; border-radius:22px; color:#4a6888; cursor:pointer; font-family:inherit; font-size:11px; }
+.btn-primary { padding:11px 24px; background:linear-gradient(130deg,#00c8f8,#0060cc); border:none; border-radius:22px; color:#000; font-weight:900; cursor:pointer; font-family:inherit; font-size:12px; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:#091522; }
+::-webkit-scrollbar-thumb { background:#122030; border-radius:2px; }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+var BL = 60; // baseline Y
+var s = (v) => Math.max(18, Math.min(102, v)); // safe clamp
+
+// Cubic Bézier arc: smooth hill/valley through (x0,y0) → peak (xp,yp) → (x1,y1)
+var arc = (x0,y0,xp,yp,x1,y1) => {
+  var cp = 0.52; // control point tension
+  return `C ${x0+(xp-x0)*cp} ${y0},${xp-(x1-x0)*0.14} ${yp},${xp} ${yp} C ${xp+(x1-xp)*0.14} ${yp},${x1-(xp-x0)*cp} ${y1},${x1} ${y1} `;
+};
+
+// ── Primitives ──────────────────────────────────────────────────────────────
+
+// P wave: smooth bell, width ~18px
+var P  = (x, h=9)  => `L ${x} ${BL} ` + arc(x,BL, x+9,s(BL-h), x+18,BL);
+// Inverted P (retrograde)
+var Pi = (x, h=7)  => `L ${x} ${BL} ` + arc(x,BL, x+9,s(BL+h), x+18,BL);
+// Isoelectric segment
+var iso = (x, len=20, dy=0) => `L ${x} ${s(BL+dy)} L ${x+len} ${s(BL+dy)} `;
+
+// Normal narrow QRS (~18px wide): tiny Q → tall R → small S
+var QRS = (x, r=32, q=4, ss=6) =>
+  `L ${x} ${BL} L ${x+3} ${s(BL+q)} L ${x+8} ${s(BL-r)} L ${x+14} ${s(BL+ss)} L ${x+18} ${BL} `;
+
+// Wide QRS (~32px): slurred broad deflection
+var wQRS = (x, r=28, inv=false) => {
+  var d = inv ? -1 : 1;
+  return `L ${x} ${BL} L ${x+5} ${s(BL+6*d)} L ${x+14} ${s(BL-r*d)} L ${x+24} ${s(BL+8*d)} L ${x+32} ${BL} `;
+};
+
+// RBBB: rSR' (rabbit ears) ~26px
+var rbbbQRS = (x) => {
+  var r1=s(BL-24), sv=s(BL+7), r2=s(BL-18);
+  return `L ${x} ${BL} ` +
+    arc(x,BL, x+5,r1, x+9,s(BL-6)) +
+    `L ${x+11} ${sv} ` +
+    arc(x+11,sv, x+16,r2, x+20,s(BL-4)) +
+    `L ${x+24} ${BL} `;
+};
+
+// LBBB: broad monophasic R, no Q, ~28px
+var lbbbQRS = (x) => {
+  var pk = s(BL-28);
+  return `L ${x} ${BL} ` + arc(x,BL, x+9,pk, x+14,pk) + arc(x+14,pk, x+20,pk, x+28,BL);
+};
+
+// WPW: delta slope then R spike then S ~26px
+var wpwQRS = (x) => {
+  var yd=s(BL-10), yR=s(BL-28), yS=s(BL+7);
+  return `L ${x} ${BL} ` + arc(x,BL, x+5,yd, x+9,s(BL-20)) + `L ${x+13} ${yR} L ${x+19} ${yS} L ${x+26} ${BL} `;
+};
+
+// T wave: smooth bell, width ~28px
+var T  = (x, h=13, neg=false) => arc(x,BL, x+14,s(BL+(neg?h:-h)), x+28,BL);
+// ST segment (flat, elevated +, depressed -)
+var ST = (x, len=20, elev=0)  => `L ${x} ${s(BL-elev)} L ${x+len} ${s(BL-elev)} `;
+
+// ── Full Rhythm Generators ───────────────────────────────────────────────────
+// Each returns a path string for viewBox "0 0 800 120"
+
+var ECG_SHAPES = {
+
+  sinus: (rr=180) => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=P(x)+iso(x+18,20)+QRS(x+38)+ST(x+56,18)+T(x+74)+`L ${Math.min(x+rr,800)} ${BL} `; x+=rr; }
+    return d;
+  },
+
+  tachy_sinus: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=P(x,10)+iso(x+18,10)+QRS(x+28,30)+ST(x+46,8)+T(x+54,12)+`L ${Math.min(x+106,800)} ${BL} `; x+=106; }
+    return d;
+  },
+
+  brady_sinus: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=P(x)+iso(x+18,20)+QRS(x+38)+ST(x+56,22)+T(x+78)+`L ${Math.min(x+268,800)} ${BL} `; x+=268; }
+    return d;
+  },
+
+  fa: () => {
+    var rrs=[70,58,88,74,62,72,56,80,66,84,61];
+    let d=`M 0 ${BL}`, x=0, ci=0;
+    while(x<800){
+      var rr=rrs[ci%rrs.length];
+      // fibrillatory baseline with small irregular humps
+      for(let i=0;i<rr-24;i+=6){
+        var ny=BL+Math.sin(x*0.6+i*1.3)*3.5+Math.cos(x*1.2+i*0.7)*2;
+        d+=`L ${x+i} ${s(ny,52,68)} `;
+      }
+      d+=QRS(x+rr-20,32,4,6)+`L ${Math.min(x+rr,800)} ${BL} `;
+      x+=rr; ci++;
+    }
+    return d;
+  },
+
+  flutter: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      // 4 flutter waves (sawtooth via Bézier)
+      for(let i=0;i<4;i++){
+        var fx=x+i*22;
+        d+=`L ${fx} ${BL} `+arc(fx,BL, fx+11,s(BL-12), fx+21,s(BL+6));
+      }
+      d+=QRS(x+88,32,3,5)+`L ${Math.min(x+186,800)} ${BL} `; x+=186;
+    }
+    return d;
+  },
+
+  bav1: () => {
+    let d=`M 0 ${BL}`, x=0;
+    // PR = ~50ms (very long)
+    while(x<800){ d+=P(x)+iso(x+18,38)+QRS(x+56)+ST(x+74,20)+T(x+94)+`L ${Math.min(x+194,800)} ${BL} `; x+=194; }
+    return d;
+  },
+
+  bav2m1: () => {
+    // Wenckebach: PR progressively longer, then dropped beat
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      var prs=[18,26,36]; // increasing PR
+      for(var pr of prs){
+        if(x>=800) break;
+        d+=P(x)+iso(x+18,pr)+QRS(x+18+pr)+ST(x+36+pr,18)+T(x+54+pr)+`L ${Math.min(x+pr+105,800)} ${BL} `;
+        x+=pr+105;
+      }
+      if(x>=800) break;
+      // blocked P — no QRS
+      d+=P(x)+`L ${Math.min(x+115,800)} ${BL} `; x+=115;
+    }
+    return d;
+  },
+
+  bav2m2: () => {
+    // Mobitz II: constant PR, sudden dropped beat
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      for(let i=0;i<3;i++){
+        if(x>=800) break;
+        d+=P(x)+iso(x+18,22)+QRS(x+40)+ST(x+58,18)+T(x+76)+`L ${Math.min(x+148,800)} ${BL} `; x+=148;
+      }
+      if(x>=800) break;
+      d+=P(x)+`L ${Math.min(x+118,800)} ${BL} `; x+=118;
+    }
+    return d;
+  },
+
+  bav3: () => {
+    // Complete AV block: P at 88px, escape QRS at 160px, fully independent
+    let d=`M 0 ${BL} `;
+    var pPos =[10,98,186,274,362,450,538,626,714];
+    var qPos =[80,240,400,560,720];
+    var all=[...pPos.map(p=>({x:p,t:'p'})),...qPos.map(q=>({x:q,t:'q'}))].sort((a,b)=>a.x-b.x);
+    for(var ev of all){
+      d+=`L ${ev.x} ${BL} `;
+      if(ev.t==='p') d+=P(ev.x,8).replace(`L ${ev.x} ${BL} `,'');
+      else d+=wQRS(ev.x,24)+ST(ev.x+32,16)+T(ev.x+48,11);
+    }
+    return d+`L 800 ${BL} `;
+  },
+
+  vt: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=`L ${x} ${BL} `+wQRS(x,26)+T(x+32,12,true)+`L ${Math.min(x+64,800)} ${BL} `; x+=64; }
+    return d;
+  },
+
+  vf: () => {
+    var amps=[22,-26,18,-22,28,-17,24,-30,19,-23,26,-20,30,-24];
+    let d=`M 0 ${BL}`, x=0, ai=0;
+    while(x<800){
+      var w=13+(ai%4)*3, a=amps[ai%amps.length];
+      d+=arc(x,BL, x+w/2,s(BL+a), x+w,BL); x+=w; ai++;
+    }
+    return d;
+  },
+
+  wpw: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=P(x)+iso(x+18,8)+wpwQRS(x+26)+T(x+52,13,true)+`L ${Math.min(x+172,800)} ${BL} `; x+=172; }
+    return d;
+  },
+
+  rbbb: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=P(x)+iso(x+18,18)+rbbbQRS(x+36)+T(x+60,10,true)+`L ${Math.min(x+176,800)} ${BL} `; x+=176; }
+    return d;
+  },
+
+  lbbb: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=P(x)+iso(x+18,18)+lbbbQRS(x+36)+`L ${x+64} ${BL} `+T(x+64,14,true)+`L ${Math.min(x+176,800)} ${BL} `; x+=176; }
+    return d;
+  },
+
+  svt: () => {
+    // No visible P before QRS (or buried in T); retrograde P in ST
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=QRS(x,28,3,5)+iso(x+18,8)+Pi(x+26,5)+T(x+44,10)+`L ${Math.min(x+86,800)} ${BL} `; x+=86; }
+    return d;
+  },
+
+  jonctionnel: () => {
+    let d=`M 0 ${BL}`, x=0;
+    // Inverted P just before QRS
+    while(x<800){ d+=Pi(x,8)+QRS(x+18,26,3,5)+ST(x+36,22)+T(x+58,11)+`L ${Math.min(x+232,800)} ${BL} `; x+=232; }
+    return d;
+  },
+
+  // ── Ischémie ───────────────────────────────────────────────────────────────
+
+  stemi_ant: () => {
+    // Tombstone QRS + convex (domed) ST elevation
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      // QRS: tiny q, tall R, tiny s
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL+4)} L ${x+43} ${s(BL-32)} L ${x+49} ${s(BL+6)} L ${x+53} ${BL} `;
+      // Convex ST (domed) + tall T  
+      var jy=s(BL-18);
+      d+=`L ${x+53} ${jy} `+arc(x+53,jy, x+70,s(BL-24), x+87,jy)+T(x+87,19)+`L ${Math.min(x+196,800)} ${BL} `;
+      x+=196;
+    }
+    return d;
+  },
+
+  stemi_inf: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,30,3,5);
+      var sy=s(BL-15); d+=`L ${x+54} ${sy} L ${x+76} ${sy} `+T(x+76,17)+`L ${Math.min(x+186,800)} ${BL} `;
+      x+=186;
+    }
+    return d;
+  },
+
+  stemi_inf_mirror: () => {
+    // Reciprocal (mirror) changes: ST depression + upright T→inverted
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x,6)+iso(x+18,18)+QRS(x+36,26,3,4);
+      var sy=s(BL+13); d+=`L ${x+54} ${sy} L ${x+74} ${sy} `+T(x+74,12,true)+`L ${Math.min(x+182,800)} ${BL} `;
+      x+=182;
+    }
+    return d;
+  },
+
+  stemi_lat: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL-28)} L ${x+45} ${s(BL+6)} L ${x+49} ${BL} `;
+      var sy=s(BL-14);
+      d+=`L ${x+49} ${sy} `+arc(x+49,sy, x+65,s(BL-19), x+81,sy)+T(x+81,17)+`L ${Math.min(x+185,800)} ${BL} `;
+      x+=185;
+    }
+    return d;
+  },
+
+  nstemi: () => {
+    // ST depression + inverted T
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,28,3,5);
+      var sy=s(BL+12); d+=`L ${x+54} ${sy} L ${x+76} ${sy} `+T(x+76,13,true)+`L ${Math.min(x+184,800)} ${BL} `;
+      x+=184;
+    }
+    return d;
+  },
+
+  pericardite: () => {
+    // PR depression (Spodick) + concave (saddle) ST elevation everywhere
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      // PR depression
+      d+=P(x,10)+`L ${x+18} ${s(BL+3)} L ${x+38} ${s(BL+3)} `+QRS(x+38,26,3,5);
+      // Saddle-shape: concave ST
+      var jx=x+56, jy=s(BL-11);
+      d+=`L ${jx} ${jy} `+arc(jx,jy, jx+18,s(BL-16), jx+36,jy)+T(jx+36,15)+`L ${Math.min(x+184,800)} ${BL} `;
+      x+=184;
+    }
+    return d;
+  },
+
+  repol_precoce: () => {
+    // J-point notch + concave ST + tall asymmetric T
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,30,3,5);
+      var jx=x+54, jy=s(BL-9);
+      d+=`L ${jx} ${jy} `+arc(jx,jy, jx+15,s(BL-13), jx+29,jy)+T(jx+29,19)+`L ${Math.min(x+184,800)} ${BL} `;
+      x+=184;
+    }
+    return d;
+  },
+
+  onde_q: () => {
+    // Pathological Q waves + elevated ST + tall T
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      // Deep Q
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL+22)} L ${x+44} ${s(BL-26)} L ${x+49} ${s(BL+5)} L ${x+53} ${BL} `;
+      d+=ST(x+53,16,10)+T(x+69,14)+`L ${Math.min(x+192,800)} ${BL} `; x+=192;
+    }
+    return d;
+  },
+
+  t_neg: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=P(x)+iso(x+18,18)+QRS(x+36,26,3,5)+ST(x+54,20)+T(x+74,18,true)+`L ${Math.min(x+184,800)} ${BL} `; x+=184; }
+    return d;
+  },
+
+  de_winter: () => {
+    // Upsloping ST depression + tall positive T (antero-septal)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL+5)} L ${x+43} ${s(BL-26)} L ${x+49} ${s(BL+11)} `;
+      // Upsloping depression → tall positive T
+      d+=`L ${x+49} ${s(BL+11)} L ${x+62} ${s(BL+6)} `+T(x+62,20)+`L ${Math.min(x+194,800)} ${BL} `; x+=194;
+    }
+    return d;
+  },
+
+  wellens_a: () => {
+    // Biphasic T in V2-V3 (briefly positive then negative)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,24,2,4)+ST(x+54,12);
+      // Biphasic T
+      d+=`L ${x+66} ${BL} `+arc(x+66,BL, x+72,s(BL-8), x+76,BL)+arc(x+76,BL, x+83,s(BL+12), x+92,BL);
+      d+=`L ${Math.min(x+184,800)} ${BL} `; x+=184;
+    }
+    return d;
+  },
+
+  wellens_b: () => {
+    // Deep symmetric negative T in V2-V3
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=P(x)+iso(x+18,18)+QRS(x+36,24,2,4)+ST(x+54,14)+T(x+68,22,true)+`L ${Math.min(x+184,800)} ${BL} `; x+=184; }
+    return d;
+  },
+
+  stemi_post: () => {
+    // Mirror: dominant R + ST depression in V1-V3
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      // Dominant R (tall, no Q)
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL-34)} L ${x+45} ${s(BL+4)} L ${x+49} ${BL} `;
+      var sy=s(BL+13); d+=`L ${x+49} ${sy} L ${x+70} ${sy} `+T(x+70,14)+`L ${Math.min(x+183,800)} ${BL} `;
+      x+=183;
+    }
+    return d;
+  },
+
+  stemi_vd: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,28,3,5);
+      var sy=s(BL-13); d+=`L ${x+54} ${sy} L ${x+74} ${sy} `+T(x+74,15)+`L ${Math.min(x+181,800)} ${BL} `;
+      x+=181;
+    }
+    return d;
+  },
+
+  ep: () => {
+    // S1Q3T3 pattern — tachycardia + right heart strain
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x,11)+iso(x+18,14);
+      // S1: deep S in DI
+      d+=`L ${x+32} ${BL} L ${x+35} ${s(BL-22)} L ${x+41} ${s(BL+12)} L ${x+47} ${BL} `;
+      // ST depression + inverted T
+      d+=`L ${x+47} ${s(BL+5)} L ${x+65} ${s(BL+5)} `+T(x+65,11,true)+`L ${Math.min(x+120,800)} ${BL} `;
+      x+=120;
+    }
+    return d;
+  },
+
+  // ── Métabolique ─────────────────────────────────────────────────────────────
+
+  hyperk: () => {
+    // No P, wide QRS, tent-shaped peaked T
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=`L ${x+14} ${BL} `+wQRS(x+14,22);
+      // Peaked symmetric T (tent shape)
+      d+=`L ${x+46} ${BL} L ${x+53} ${s(BL-26)} L ${x+60} ${BL} `;
+      d+=`L ${Math.min(x+180,800)} ${BL} `; x+=180;
+    }
+    return d;
+  },
+
+  hypok: () => {
+    // Flat T + prominent U wave (after T)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,28,3,5);
+      d+=`L ${x+54} ${BL} `+arc(x+54,BL, x+63,s(BL-5), x+72,BL);  // flat T
+      d+=arc(x+72,BL, x+83,s(BL-11), x+96,BL);                     // U wave
+      d+=`L ${Math.min(x+174,800)} ${BL} `; x+=174;
+    }
+    return d;
+  },
+
+  qt_long: () => {
+    // Very long QT interval — T wave starts late and broad
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,28,3,5);
+      d+=`L ${x+54} ${BL} L ${x+96} ${BL} `+T(x+96,15)+`L ${Math.min(x+214,800)} ${BL} `; x+=214;
+    }
+    return d;
+  },
+
+  torsades: () => {
+    // Polymorphic VT with rotating axis (sinusoidal envelope)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      var env=Math.sin(x*0.021)*25;
+      d+=wQRS(x, Math.max(Math.abs(env)+8,12), env>=0); x+=40;
+    }
+    return d;
+  },
+
+  brugada: () => {
+    // Coved-type: convex ST descent from R peak → negative T in V1
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL-28)} `;
+      // Coved: straight downslope from R peak
+      d+=arc(x+39,s(BL-28), x+54,s(BL-14), x+65,s(BL-5))+arc(x+65,s(BL-5), x+73,s(BL+7), x+79,s(BL+7));
+      d+=`L ${x+84} ${BL} L ${Math.min(x+184,800)} ${BL} `; x+=184;
+    }
+    return d;
+  },
+
+  digitale: () => {
+    // Scooped (reverse-tick) ST-T
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,26,3,5);
+      d+=arc(x+54,BL, x+70,s(BL+13), x+84,s(BL+7))+arc(x+84,s(BL+7), x+94,s(BL+2), x+106,BL);
+      d+=`L ${Math.min(x+186,800)} ${BL} `; x+=186;
+    }
+    return d;
+  },
+
+  hypercalcemie: () => {
+    // Short QT: T comes right after QRS (no ST)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,28,3,5);
+      d+=`L ${x+54} ${BL} `+T(x+54,14)+`L ${Math.min(x+154,800)} ${BL} `; x+=154;
+    }
+    return d;
+  },
+
+  hypocalcemie: () => {
+    // Very long ST (prolonged QT via long ST segment)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36,26,3,5);
+      d+=`L ${x+54} ${BL} L ${x+104} ${BL} `+T(x+104,14)+`L ${Math.min(x+218,800)} ${BL} `; x+=218;
+    }
+    return d;
+  },
+
+  hypothermie: () => {
+    // Osborn (J) wave — positive deflection at QRS end, bradycardia
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x,7)+iso(x+18,20)+QRS(x+38,24,3,5);
+      // J wave (Osborn) — smooth hump right after QRS
+      d+=`L ${x+56} ${BL} `+arc(x+56,BL, x+63,s(BL-13), x+71,BL);
+      // Concave ST + T
+      d+=arc(x+71,BL, x+86,s(BL-9), x+100,BL)+T(x+100,13)+`L ${Math.min(x+246,800)} ${BL} `;
+      x+=246;
+    }
+    return d;
+  },
+
+  // ── Autres morphologies ──────────────────────────────────────────────────────
+
+  asystolie: () => `M 0 ${BL} L 800 ${BL}`,
+
+  extrasystoles_v: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      for(let i=0;i<2;i++){
+        if(x>=800) break;
+        d+=P(x)+iso(x+18,18)+QRS(x+36)+ST(x+54,20)+T(x+74,12)+`L ${Math.min(x+162,800)} ${BL} `; x+=162;
+      }
+      if(x>=800) break;
+      // ESV: wide premature QRS, compensatory pause
+      d+=`L ${x} ${BL} `+wQRS(x,24)+T(x+32,12,true)+`L ${Math.min(x+182,800)} ${BL} `; x+=182;
+    }
+    return d;
+  },
+
+  extrasystoles_s: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      for(let i=0;i<2;i++){
+        if(x>=800) break;
+        d+=P(x)+iso(x+18,18)+QRS(x+36)+ST(x+54,20)+T(x+74,12)+`L ${Math.min(x+177,800)} ${BL} `; x+=177;
+      }
+      if(x>=800) break;
+      // ESA: premature narrow QRS with different P
+      d+=P(x,7)+iso(x+18,12)+QRS(x+30,24,2,4)+T(x+48,11)+`L ${Math.min(x+128,800)} ${BL} `; x+=128;
+    }
+    return d;
+  },
+
+  bigeminisme: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36)+ST(x+54,18)+T(x+72,12)+`L ${Math.min(x+128,800)} ${BL} `; x+=128;
+      if(x>=800) break;
+      d+=`L ${x} ${BL} `+wQRS(x,24)+T(x+32,12,true)+`L ${Math.min(x+118,800)} ${BL} `; x+=118;
+    }
+    return d;
+  },
+
+  trigeminisme: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      for(let i=0;i<2;i++){
+        if(x>=800) break;
+        d+=P(x)+iso(x+18,18)+QRS(x+36)+ST(x+54,18)+T(x+72,12)+`L ${Math.min(x+122,800)} ${BL} `; x+=122;
+      }
+      if(x>=800) break;
+      d+=`L ${x} ${BL} `+wQRS(x,24)+T(x+32,12,true)+`L ${Math.min(x+120,800)} ${BL} `; x+=120;
+    }
+    return d;
+  },
+
+  pacemaker: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      // Pacing spike: vertical line segment, then wide QRS (LBBB morphology)
+      d+=`L ${x} ${BL} L ${x+1} ${s(BL-36)} L ${x+2} ${s(BL+10)} L ${x+3} ${BL} `;
+      d+=wQRS(x+3,22)+T(x+35,14,true)+`L ${Math.min(x+178,800)} ${BL} `; x+=178;
+    }
+    return d;
+  },
+
+  tv_polymorphe: () => {
+    var amps=[22,-25,18,-30,25,-21,29,-18,23,-27];
+    let d=`M 0 ${BL}`, x=0, ai=0;
+    while(x<800){
+      var a=amps[ai%amps.length];
+      d+=wQRS(x, Math.max(Math.abs(a)*0.85,12), a>=0); x+=40; ai++;
+    }
+    return d;
+  },
+
+  flutter_v: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){ d+=arc(x,BL, x+12,s(BL-26), x+24,BL)+arc(x+24,BL, x+36,s(BL+26), x+48,BL); x+=48; }
+    return d;
+  },
+
+  bloc_sa: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      for(let i=0;i<3;i++){
+        if(x>=800) break;
+        d+=P(x)+iso(x+18,18)+QRS(x+36)+ST(x+54,20)+T(x+74,12)+`L ${Math.min(x+152,800)} ${BL} `; x+=152;
+      }
+      if(x>=800) break;
+      // Pause = exactly 2× RR (blocked SA output)
+      d+=`L ${Math.min(x+304,800)} ${BL} `; x+=304;
+    }
+    return d;
+  },
+
+  pause_sinusale: () => {
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      for(let i=0;i<2;i++){
+        if(x>=800) break;
+        d+=P(x)+iso(x+18,18)+QRS(x+36)+ST(x+54,20)+T(x+74,12)+`L ${Math.min(x+154,800)} ${BL} `; x+=154;
+      }
+      if(x>=800) break;
+      d+=`L ${Math.min(x+238,800)} ${BL} `; x+=238;
+    }
+    return d;
+  },
+
+  maladie_sinus: () => {
+    var rrs=[154,162,316,152,160,310,157];
+    let d=`M 0 ${BL}`, x=0, ri=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+QRS(x+36)+ST(x+54,20)+T(x+74,12)+`L ${Math.min(x+rrs[ri%rrs.length],800)} ${BL} `;
+      x+=rrs[ri%rrs.length]; ri++;
+    }
+    return d;
+  },
+
+  onde_epsilon: () => {
+    // Small epsilon wave just after widened QRS (ARVC)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18)+wQRS(x+36,20);
+      d+=`L ${x+56} ${BL} `+arc(x+56,BL, x+62,s(BL-7), x+68,BL)+T(x+68,12,true)+`L ${Math.min(x+202,800)} ${BL} `;
+      x+=202;
+    }
+    return d;
+  },
+
+  hypertrophie_vg: () => {
+    // Very tall R, LV strain (ST depression + T inversion)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x,13)+iso(x+18,20);
+      d+=`L ${x+38} ${BL} L ${x+41} ${s(BL+4)} L ${x+44} ${s(BL-42)} L ${x+50} ${s(BL+8)} L ${x+55} ${BL} `;
+      d+=`L ${x+55} ${s(BL+8)} L ${x+74} ${s(BL+8)} `+T(x+74,16,true)+`L ${Math.min(x+194,800)} ${BL} `;
+      x+=194;
+    }
+    return d;
+  },
+
+  hypertrophie_vd: () => {
+    // Dominant R in V1, right axis, RV strain T-
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x,10)+iso(x+18,18);
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL+3)} L ${x+42} ${s(BL-34)} L ${x+47} ${s(BL+5)} L ${x+51} ${BL} `;
+      d+=ST(x+51,16,8)+T(x+67,14,true)+`L ${Math.min(x+180,800)} ${BL} `; x+=180;
+    }
+    return d;
+  },
+
+  hbag: () => {
+    // rS pattern (DII): small r then deep S, left axis deviation
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL-12)} L ${x+44} ${s(BL+26)} L ${x+50} ${BL} `;
+      d+=T(x+50,11)+`L ${Math.min(x+179,800)} ${BL} `; x+=179;
+    }
+    return d;
+  },
+
+  hbpg: () => {
+    // qR pattern: deep Q then tall R (right axis deviation)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      d+=`L ${x+36} ${BL} L ${x+39} ${s(BL+16)} L ${x+43} ${s(BL-28)} L ${x+49} ${s(BL+6)} L ${x+54} ${BL} `;
+      d+=T(x+54,11)+`L ${Math.min(x+179,800)} ${BL} `; x+=179;
+    }
+    return d;
+  },
+
+  onde_p_biventriculaire: () => {
+    // Bifid P wave (double hump = left atrial enlargement)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=`L ${x} ${BL} `+arc(x,BL, x+7,s(BL-9), x+13,BL)+arc(x+13,BL, x+20,s(BL-7), x+27,BL);
+      d+=iso(x+27,16)+QRS(x+43)+ST(x+61,20)+T(x+81,12)+`L ${Math.min(x+186,800)} ${BL} `; x+=186;
+    }
+    return d;
+  },
+
+  onde_p_pulmonale: () => {
+    // Tall narrow P (right atrial enlargement)
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=`L ${x} ${BL} L ${x+5} ${s(BL-20)} L ${x+11} ${BL} `+iso(x+11,14)+QRS(x+25)+ST(x+43,20)+T(x+63,11)+`L ${Math.min(x+166,800)} ${BL} `;
+      x+=166;
+    }
+    return d;
+  },
+
+  rythme_av_dissociation: () => {
+    var pPos=[8,92,176,260,344,428,512,596,680,764];
+    var qPos=[55,178,301,424,547,670];
+    var all=[...pPos.map(p=>({x:p,t:'p'})),...qPos.map(q=>({x:q,t:'q'}))].sort((a,b)=>a.x-b.x);
+    let d=`M 0 ${BL} `;
+    for(var ev of all){
+      d+=`L ${ev.x} ${BL} `;
+      if(ev.t==='p') d+=P(ev.x,7).replace(`L ${ev.x} ${BL} `,'');
+      else d+=QRS(ev.x,24,3,5)+ST(ev.x+18,16)+T(ev.x+34,11);
+    }
+    return d+`L 800 ${BL} `;
+  },
+
+  ddp: () => {
+    // DDD pacemaker: atrial spike + P then ventricular spike + wide QRS
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=`L ${x} ${BL} L ${x+1} ${s(BL-28)} L ${x+2} ${BL} `+P(x+2,8)+iso(x+20,16);
+      d+=`L ${x+36} ${BL} L ${x+37} ${s(BL-28)} L ${x+38} ${BL} `;
+      d+=wQRS(x+38,22)+T(x+60,13,true)+`L ${Math.min(x+180,800)} ${BL} `; x+=180;
+    }
+    return d;
+  },
+
+  rbb_incomplet: () => {
+    // IRBBB: rSr' in V1, QRS < 120ms — slimmer rabbit ears
+    let d=`M 0 ${BL}`, x=0;
+    while(x<800){
+      d+=P(x)+iso(x+18,18);
+      var r1=s(BL-20), sv=s(BL+5), r2=s(BL-14);
+      d+=`L ${x+36} ${BL} `+arc(x+36,BL, x+40,r1, x+43,s(BL-4))+`L ${x+45} ${sv} `+arc(x+45,sv, x+49,r2, x+53,s(BL-2))+`L ${x+57} ${BL} `;
+      d+=T(x+57,9,true)+`L ${Math.min(x+177,800)} ${BL} `; x+=177;
+    }
+    return d;
+  },
+};
+
+var CORE_CASES = [
+  { id:1, cat:"rythme", title:"Rythme Sinusal Normal", short:"Sinusal", diff:"facile", shape:"sinus", lead:"DII", answer:"Rythme sinusal normal", desc:"Onde P positive DI/DII/aVF, PR 120-200ms, QRS fins < 120ms, FC 60-100/min.", keys:["P+ en DI/DII/aVF","PR 120-200ms","QRS fins < 120ms","FC 60-100/min"], hint:"Ondes P régulières avant chaque QRS, PR constant.", opts:["Rythme sinusal normal","Bradycardie sinusale","BAV 1°","Rythme jonctionnel"], ok:0 },
+  { id:2, cat:"rythme", title:"Tachycardie Sinusale", short:"Tachy Sinus", diff:"facile", shape:"tachy_sinus", lead:"DII", answer:"Tachycardie Sinusale", desc:"Rythme sinusal, FC > 100/min. Chercher la cause : douleur, fièvre, anémie, EP, sepsis.", keys:["FC > 100/min","P+ régulières","PR et QRS normaux","Secondaire → chercher cause"], hint:"FC > 100/min avec ondes P normales. Toujours chercher la cause.", opts:["Tachycardie Sinusale","Flutter Auriculaire 2:1","TSV","FA rapide"], ok:0 },
+  { id:3, cat:"rythme", title:"Bradycardie Sinusale", short:"Brady Sinus", diff:"facile", shape:"brady_sinus", lead:"DII", answer:"Bradycardie Sinusale", desc:"FC < 60/min, rythme sinusal. Sportif : normal. Sinon : hypothyroïdie, bêta-bloquants.", keys:["FC < 60/min","Ondes P normales","PR et QRS normaux","Chercher cause si symptomatique"], hint:"Compter la fréquence. Les autres paramètres (P, PR, QRS) sont normaux.", opts:["BAV 3°","Rythme jonctionnel","Bradycardie Sinusale","BAV 2° Mobitz I"], ok:2 },
+  { id:4, cat:"rythme", title:"Fibrillation Auriculaire", short:"FA", diff:"facile", shape:"fa", lead:"DII", answer:"Fibrillation Auriculaire", desc:"Absence d'ondes P, RR totalement irréguliers, fibrillation basale (f waves 350-600/min).", keys:["Absence d'ondes P","RR IRRÉGULIERS","Fibrillation basale (f waves)","FC variable 60-160/min"], hint:"Pas d'ondes P + RR irréguliers = FA jusqu'à preuve du contraire.", opts:["FA","Flutter Auriculaire","Tachycardie sinusale","Arythmie sinusale"], ok:0 },
+  { id:5, cat:"rythme", title:"Flutter Auriculaire", short:"Flutter", diff:"moyen", shape:"flutter", lead:"DII", answer:"Flutter Auriculaire", desc:"Ondes F en dents de scie 300/min (DII/DIII/aVF). Bloc 2:1 → FC ~150/min. Régulier.", keys:["Ondes F dents de scie 300/min","Pas de ligne isoélectrique","FC ~150/min (2:1)","Régulier"], hint:"FC ~150/min régulière : évoquer flutter 2:1. Dents de scie en DII.", opts:["FA","Flutter Auriculaire","TSV","TV"], ok:1 },
+  { id:6, cat:"rythme", title:"BAV 1° degré", short:"BAV1", diff:"facile", shape:"bav1", lead:"DII", answer:"BAV 1° degré", desc:"PR > 200ms (> 5 petits carreaux). Toutes les P conduites. Bénin.", keys:["PR > 200ms","Toutes P conduites","Régulier","QRS fins"], hint:"Mesurez le PR. Est-il > 1 grand carré (200ms) ?", opts:["Sinusal normal","BAV 1°","BAV 2° Wenckebach","BAV 3°"], ok:1 },
+  { id:7, cat:"rythme", title:"BAV 2° Mobitz I (Wenckebach)", short:"Wenckebach", diff:"moyen", shape:"bav2m1", lead:"DII", answer:"BAV 2° Mobitz I (Wenckebach)", desc:"PR s'allonge progressivement jusqu'au blocage d'une P. Nœud AV. Bénin.", keys:["PR PROGRESSIVEMENT ALLONGÉ","P bloquée sans QRS","Groupes de battements","Nœud AV = bénin"], hint:"Le PR s'allonge-t-il avant le blocage ? Si oui : Wenckebach.", opts:["BAV 1°","BAV 2° Mobitz I","BAV 2° Mobitz II","BAV 3°"], ok:1 },
+  { id:8, cat:"rythme", title:"BAV 2° Mobitz II", short:"Mobitz II", diff:"difficile", shape:"bav2m2", lead:"DII", answer:"BAV 2° Mobitz II", desc:"PR CONSTANT puis P soudainement bloquée. Infrahissien. GRAVE → stimulateur cardiaque.", keys:["PR CONSTANT","P bloquée sans allongement","Infrahissien","→ Stimulateur cardiaque"], hint:"PR CONSTANT avant le blocage (≠ Mobitz I). Soudain : pas de QRS.", opts:["BAV 1°","BAV 2° Mobitz I","BAV 2° Mobitz II","BAV 3°"], ok:2 },
+  { id:9, cat:"rythme", title:"BAV 3° degré (complet)", short:"BAV3", diff:"difficile", shape:"bav3", lead:"DII", answer:"BAV 3° degré (complet)", desc:"Dissociation AV complète. P et QRS indépendants. Échappement ventriculaire 30-40/min. Urgence.", keys:["Dissociation AV complète","P régulières ET QRS réguliers mais INDÉPENDANTS","FC P > FC QRS","URGENCE → stimulateur"], hint:"P et QRS battent-ils indépendamment ? = dissociation AV totale.", opts:["BAV 2° Mobitz II","Rythme idioventriculaire","BAV 3°","Bloc sino-auriculaire"], ok:2 },
+  { id:10, cat:"rythme", title:"Tachycardie Ventriculaire", short:"TV", diff:"difficile", shape:"vt", lead:"DII", answer:"Tachycardie Ventriculaire (TV)", desc:"QRS larges > 120ms, réguliers, FC 100-250/min. TV jusqu'à preuve du contraire !", keys:["QRS LARGES > 120ms réguliers","FC 140-220/min","Dissociation AV / captures / fusions","TV jusqu'à preuve du contraire !"], hint:"QRS larges + tachycardie = TV ! Ne jamais traiter comme TSV d'emblée.", opts:["TSV avec aberration","Flutter","FV","TV"], ok:3 },
+  { id:11, cat:"rythme", title:"Fibrillation Ventriculaire", short:"FV", diff:"facile", shape:"vf", lead:"DII", answer:"Fibrillation Ventriculaire (FV)", desc:"Activité chaotique, sans QRS identifiable. ACR. → Choc électrique IMMÉDIAT !", keys:["Activité CHAOTIQUE sans QRS","Pas de pouls","ACR immédiat","→ Défibrillation immédiate !"], hint:"AUCUN QRS identifiable. Activité totalement chaotique. URGENCE ABSOLUE.", opts:["TV","Flutter ventriculaire","FV","Asystolie"], ok:2 },
+  { id:12, cat:"rythme", title:"TSV (AVNRT/AVRT)", short:"TSV", diff:"moyen", shape:"svt", lead:"DII", answer:"Tachycardie Supraventriculaire (TSV)", desc:"QRS fins réguliers, FC 150-250/min. Début/fin brutaux. P rétrogrades dans le ST.", keys:["QRS FINS < 120ms","FC 170-220/min régulier","Début/fin BRUTAUX","P rétrograde dans le ST ou non visible"], hint:"QRS fins + tachycardie rapide. P rétrogrades après le QRS.", opts:["Tachycardie sinusale","Flutter 2:1","TV","TSV"], ok:3 },
+  { id:13, cat:"rythme", title:"WPW (Pré-excitation)", short:"WPW", diff:"difficile", shape:"wpw", lead:"DI", answer:"Syndrome de WPW (pré-excitation)", desc:"PR court < 120ms, onde Delta, QRS large. Faisceau de Kent. Risque FV si FA.", keys:["PR COURT < 120ms","Onde DELTA (rampe initiale)","QRS LARGE > 120ms","T discordante — Risque FV si FA !"], hint:"PR court + onde delta + QRS large = WPW.", opts:["BBD","BAV 1°","WPW","Hyperkaliémie"], ok:2 },
+  { id:14, cat:"rythme", title:"BBD (Bloc de Branche Droit)", short:"BBD", diff:"moyen", shape:"rbbb", lead:"V1", answer:"Bloc de Branche Droit (BBD)", desc:"QRS ≥ 120ms. RSR' en V1 (oreilles de lapin). S large en DI/V5/V6. T négative V1-V2.", keys:["QRS ≥ 120ms","RSR' en V1 (M shape)","S large en DI/V5/V6","T- V1-V2 (normale dans BBD)"], hint:"M en V1 et W en V6. RSR' en V1 = oreilles de lapin.", opts:["BBG","BBD","WPW","TV"], ok:1 },
+  { id:15, cat:"rythme", title:"BBG (Bloc de Branche Gauche)", short:"BBG", diff:"difficile", shape:"lbbb", lead:"V6", answer:"Bloc de Branche Gauche (BBG)", desc:"QRS ≥ 120ms. R large encochée V5/V6/DI. QS en V1. T discordante. TOUJOURS pathologique.", keys:["QRS ≥ 120ms","R large encochée V5/V6/DI","QS ou rS en V1","T discordante OBLIGATOIRE — si concordante → Sgarbossa"], hint:"QRS large + R encochée V6 + QS en V1. T discordante obligatoire.", opts:["BBD","Hyperkaliémie","BBG","TV à complexes larges"], ok:2 },
+  { id:16, cat:"rythme", title:"Rythme Jonctionnel", short:"Jonctionnel", diff:"difficile", shape:"jonctionnel", lead:"DII", answer:"Rythme Jonctionnel", desc:"Pacemaker nodal/hissien. FC 40-60/min, QRS fins. P rétrograde (inversée DII) ± présente.", keys:["FC 40-60/min","QRS fins","P rétrograde (négative DII/DIII/aVF)","P avant, dans, ou après le QRS"], hint:"QRS fins + FC lente + P invertée en DII = jonctionnel.", opts:["Bradycardie sinusale","BAV 3°","Rythme jonctionnel","Idioventriculaire"], ok:2 },
+  { id:17, cat:"rythme", title:"Extrasystoles Ventriculaires", short:"ESV", diff:"moyen", shape:"extrasystoles_v", lead:"DII", answer:"Extrasystoles Ventriculaires (ESV)", desc:"QRS large prématuré, non précédé d'onde P. Pause compensatrice complète. Peut être isolées ou couplées.", keys:["QRS LARGE prématuré sans P","Pause compensatrice complète","Aspect bizarre","Souvent bénignes si cœur sain"], hint:"QRS large et prématuré, sans onde P précédente. Pause après.", opts:["ESV","ESA","TV","Conduite aberrante"], ok:0 },
+  { id:18, cat:"rythme", title:"Extrasystoles Supra-ventriculaires", short:"ESA", diff:"moyen", shape:"extrasystoles_s", lead:"DII", answer:"Extrasystoles Supra-ventriculaires (ESA)", desc:"Battement prématuré avec P' ectopique (différente de la P sinusale), QRS fin. Pause non compensatrice.", keys:["P' prématurée (morphologie différente)","QRS FIN","Pause non compensatrice","Peut déclencher TSV/FA"], hint:"P' prématurée avec QRS fin = ESA. La pause n'est pas complète.", opts:["ESV","ESA","Bloc AV 2°","TV"], ok:1 },
+  { id:19, cat:"rythme", title:"Bigéminisme Ventriculaire", short:"Bigéminisme V", diff:"moyen", shape:"bigeminisme", lead:"DII", answer:"Bigéminisme Ventriculaire", desc:"ESV alternant avec un battement sinusal. 1 normal : 1 ESV. Pattern régulier.", keys:["1 battement sinusal : 1 ESV (alternance)","ESV régulières (couplage fixe)","QRS larges alternants","Chercher hypokaliémie, intoxication digitale"], hint:"Alternance régulière battement normal - ESV large. Pattern 1:1.", opts:["Trigéminisme","Bigéminisme ventriculaire","FA","TV"], ok:1 },
+  { id:20, cat:"rythme", title:"Trigéminisme Ventriculaire", short:"Trigéminisme V", diff:"moyen", shape:"trigeminisme", lead:"DII", answer:"Trigéminisme Ventriculaire", desc:"ESV toutes les 2 battements sinusaux. Pattern : normal - normal - ESV.", keys:["2 battements sinusaux : 1 ESV","Pattern régulier (3:1)","ESV large et prématurée","Causes : ischémie, hypokaliémie, digitale"], hint:"Pattern : 2 normaux puis 1 ESV large. Trigéminisme = toutes les 3.", opts:["Bigéminisme","Trigéminisme ventriculaire","ESA","Flutter"], ok:1 },
+  { id:21, cat:"rythme", title:"Pacemaker (stimulateur cardiaque)", short:"Pacemaker VVI", diff:"moyen", shape:"pacemaker", lead:"DII", answer:"Rythme électro-entraîné (pacemaker)", desc:"Spicule électrique (spike) avant chaque QRS. QRS larges (stimulation ventriculaire). T discordante.", keys:["SPIKE (spicule) avant le QRS","QRS LARGE après le spike","T discordante","BBD-like si VVI"], hint:"Cherchez le spike (petite déflexion verticale) avant le QRS large.", opts:["BBG","TV","Pacemaker","Hyperkaliémie"], ok:2 },
+  { id:22, cat:"rythme", title:"Asystolie", short:"Asystolie", diff:"facile", shape:"asystolie", lead:"DII", answer:"Asystolie", desc:"Ligne plate. Pas d'activité électrique. ACR. → RCP + adrénaline. Forme pronostique la plus sombre.", keys:["Ligne PLATE (isoélectrique)","Pas d'activité électrique","ACR","→ RCP + adrénaline IV"], hint:"Ligne plate = asystolie. URGENCE absolue. Vérifier les électrodes avant !", opts:["FV","Asystolie","Bloc SA","Pause sinusale"], ok:1 },
+  { id:23, cat:"rythme", title:"Maladie du Sinus", short:"Maladie du Sinus", diff:"difficile", shape:"maladie_sinus", lead:"DII", answer:"Maladie du Sinus (Sick Sinus Syndrome)", desc:"Dysfonction du nœud sinusal : bradycardie + pauses + possible tachycardie (syndrome brady-tachy).", keys:["Bradycardie sinusale","Pauses sinusales prolongées","Syndrome brady-tachy possible","→ Stimulateur cardiaque"], hint:"RR irréguliers avec pauses prolongées. Pas de dissociation AV.", opts:["BAV 3°","FA","Maladie du Sinus","Bloc SA 2°"], ok:2 },
+  { id:24, cat:"rythme", title:"Bloc Sino-Auriculaire", short:"Bloc SA", diff:"difficile", shape:"bloc_sa", lead:"DII", answer:"Bloc Sino-Auriculaire (BSA)", desc:"Pause correspondant à un multiple exact du RR de base. Absence de tout le complexe PQRST.", keys:["Pause = multiple exact du RR de base","Absence du complexe PQRST entier","Bloc de conduction SA","≠ Pause sinusale (pas de multiple)"], hint:"La pause dure exactement 2x le RR normal = BSA 2:1.", opts:["Pause sinusale","BSA","BAV 2°","FA"],ok:1 },
+  { id:25, cat:"rythme", title:"Pause Sinusale", short:"Pause Sinusale", diff:"moyen", shape:"pause_sinusale", lead:"DII", answer:"Pause Sinusale", desc:"Pause non multiple du RR. Le nœud sinusal 'oublie' de dépolariser. Chercher cause vago-tonique.", keys:["Pause NON multiple du RR de base","Absence d'activité","Pas de dissociation AV","Causes : vagotonie, médicaments"], hint:"La pause n'est PAS un multiple du RR normal (≠ bloc SA).", opts:["Bloc SA","BAV 2° Mobitz I","Pause sinusale","Maladie du Sinus"], ok:2 },
+  { id:26, cat:"rythme", title:"TV Polymorphe", short:"TV Polymorphe", diff:"difficile", shape:"tv_polymorphe", lead:"DII", answer:"TV Polymorphe (Torsades de Pointe)", desc:"TV avec QRS de morphologie et d'axe variables. Si sur fond de QT long = Torsades de Pointe.", keys:["QRS de morphologie VARIABLE","FC 200-250/min","Axe qui tourne (torsades)","Fond de QT long → Torsades de Pointe"], hint:"QRS larges de morphologies changeantes = TV polymorphe. QT long associé ?", opts:["TV monomorphe","FV","TV polymorphe / Torsades","Flutter ventriculaire"], ok:2 },
+  { id:27, cat:"rythme", title:"Flutter Ventriculaire", short:"Flutter V", diff:"difficile", shape:"flutter_v", lead:"DII", answer:"Flutter Ventriculaire", desc:"Tachycardie ventriculaire très rapide (250-350/min), ondes sinusoïdales régulières. Précède souvent la FV.", keys:["FC 250-350/min","Ondes sinusoïdales régulières","Pas de QRS distinct","Précurseur de FV → défibrillation"], hint:"Ondes sinusoïdales régulières à très haute fréquence. Différent de la FV (irrégulière).", opts:["TV","FV","Flutter ventriculaire","Torsades de Pointe"], ok:2 },
+  // ISCHÉMIE
+  { id:28, cat:"ischémie", title:"STEMI Antérieur", short:"STEMI Ant.", diff:"facile", shape:"stemi_ant", lead:"V2-V4", answer:"STEMI Antérieur (IVA)", desc:"Sus-ST convexe V1-V4 (onde de Pardee). Territoire IVA. Miroir inférieures. Urgence coronaire.", keys:["Sus-ST ≥ 1mm V1-V4 CONVEXE","Onde de Pardee (dôme)","Territoire IVA","Miroir en DII/DIII/aVF"], hint:"Sus-ST en forme de dôme dans les précordiales V1-V4.", opts:["NSTEMI","Péricardite","STEMI Antérieur","Repolarisation précoce"], ok:2 },
+  { id:29, cat:"ischémie", title:"STEMI Inférieur", short:"STEMI Inf.", diff:"moyen", shape:"stemi_inf", lead:"DII/DIII/aVF", answer:"STEMI Inférieur (CD/CX)", desc:"Sus-ST DII/DIII/aVF. Miroir OBLIGATOIRE en aVL. CD (80%) ou CX (20%). Chercher atteinte VD.", keys:["Sus-ST DII/DIII/aVF","Miroir aVL OBLIGATOIRE","CD (80%) ou CX (20%)","V3R/V4R → atteinte VD"], hint:"Sus-ST inférieurs + miroir en aVL. Miroir absent = douter du diagnostic.", opts:["STEMI Latéral","Péricardite","STEMI Inférieur","EP"], ok:2 },
+  { id:30, cat:"ischémie", title:"STEMI Latéral", short:"STEMI Lat.", diff:"moyen", shape:"stemi_lat", lead:"DI/aVL/V5-V6", answer:"STEMI Latéral (CX/Diagonale)", desc:"Sus-ST DI/aVL/V5/V6. Territoire CX ou diagonale. Miroir DII/DIII/aVF.", keys:["Sus-ST DI/aVL et/ou V5/V6","Territoire CX ou diagonale","Miroir DII/DIII/aVF possible","Souvent étendu si CD gauche proximal"], hint:"Sus-ST dans les dérivations latérales. CX ou diagonale.", opts:["STEMI Antérieur","STEMI Latéral","STEMI Inférieur","BBG aigu"], ok:1 },
+  { id:31, cat:"ischémie", title:"STEMI Postérieur", short:"STEMI Post.", diff:"difficile", shape:"stemi_post", lead:"V1-V3 (miroir)", answer:"STEMI Postérieur (CD/CX)", desc:"STEMI POSTÉRIEUR : pas de sus-ST en V1-V3 mais sous-ST miroir ! Onde R dominante V1-V2. Compléter V7-V8-V9.", keys:["Sous-ST V1-V3 (miroir du sus-ST post.)","Onde R dominante V1-V2","Sus-ST en V7/V8/V9","Territoire CD ou CX postérieure"], hint:"Pas de sus-ST visible en standard ! Sous-ST V1-V3 + R dominante = STEMI postérieur.", opts:["NSTEMI V1-V3","STEMI Antérieur","BBD","STEMI Postérieur"], ok:3 },
+  { id:32, cat:"ischémie", title:"STEMI VD", short:"STEMI VD", diff:"difficile", shape:"stemi_vd", lead:"V3R/V4R", answer:"STEMI VD (extension du STEMI inférieur)", desc:"Sus-ST en V3R/V4R ≥ 1mm. Extension droite d'un STEMI inférieur. Contre-indication aux dérivés nitrés !", keys:["Sus-ST V3R/V4R ≥ 1mm","Associé au STEMI inférieur (CD proximale)","Contre-indication NITRÉS !","Traitement : remplissage vasculaire"], hint:"Chercher V3R/V4R chez tout STEMI inférieur. Sus-ST = atteinte VD.", opts:["STEMI Antérieur","NSTEMI","STEMI VD","Péricardite"], ok:2 },
+  { id:33, cat:"ischémie", title:"NSTEMI / Angor Instable", short:"NSTEMI", diff:"moyen", shape:"nstemi", lead:"V4-V5", answer:"NSTEMI / Angor Instable (sous-décalage ST)", desc:"Sous-ST ≥ 1mm horizontal/descendant dans ≥2 dérivations contiguës ± T négatives. Troponines = NSTEMI.", keys:["Sous-ST ≥ 1mm HORIZONTAL ou DESCENDANT","≥ 2 dérivations contiguës","T négatives possibles","Troponines ↑ = NSTEMI / Troponines N = Angor instable"], hint:"Sous-ST horizontal ou descendant (pas ascendant). Dérivations contiguës.", opts:["Sus-ST STEMI","Repolarisation précoce","Effet digitale","NSTEMI / Sous-ST ischémique"], ok:3 },
+  { id:34, cat:"ischémie", title:"Péricardite Aiguë", short:"Péricardite", diff:"moyen", shape:"pericardite", lead:"DII", answer:"Péricardite Aiguë", desc:"Sus-ST DIFFUS CONCAVE (en selle). TOUTES dérivations sauf aVR/V1. Dépression PR (Spodick). Pas de miroir.", keys:["Sus-ST diffus CONCAVE (en selle)","PAS de miroir","Dépression PR/PQ (signe de Spodick)","Toutes dérivations sauf aVR (sus-ST) et V1"], hint:"Sus-ST diffus concave sans territoire + dépression PQ. Pas de miroir.", opts:["STEMI Antérieur étendu","Repolarisation précoce","Péricardite Aiguë","STEMI Inférieur"], ok:2 },
+  { id:35, cat:"ischémie", title:"Repolarisation Précoce", short:"Repol. Précoce", diff:"difficile", shape:"repol_precoce", lead:"V3-V5", answer:"Repolarisation Précoce (variante normale)", desc:"Sus-ST CONCAVE ≤ 2mm au J-point V3-V5. T amples asymétriques. Stable dans le temps. Jeune sujet sain.", keys:["Sus-ST CONCAVE ≤ 2mm J-point V3-V5","T amples asymétriques (base large)","PAS de dépression PQ (≠ péricardite)","STABLE dans le temps — jeune sain"], hint:"Sus-ST concave ≤ 2mm, stable, jeune sportif. Pas de dépression PQ.", opts:["Péricardite","STEMI Antérieur","Repolarisation Précoce","NSTEMI"], ok:2 },
+  { id:36, cat:"ischémie", title:"Embolie Pulmonaire", short:"Embolie Pulm.", diff:"difficile", shape:"ep", lead:"DI", answer:"Embolie Pulmonaire (EP)", desc:"Tachycardie sinusale +++. S1Q3T3. T négatives V1-V4. BBD aigu. Contexte clinique clé.", keys:["Tachycardie sinusale (signe ++ fréquent)","S1Q3T3 (S DI, Q DIII, T- DIII)","T négatives V1-V4","BBD aigu possible"], hint:"Tachycardie sinusale + T- V1-V3 + S1Q3T3. Contexte TVP/FdR.", opts:["NSTEMI","BBD chronique","EP","STEMI Antérieur"], ok:2 },
+  { id:37, cat:"ischémie", title:"Onde Q de nécrose", short:"Onde Q", diff:"moyen", shape:"onde_q", lead:"V2-V4", answer:"Séquelle de nécrose (onde Q de nécrose)", desc:"Onde Q ≥ 40ms (1 petit carreau) et/ou ≥ 25% de l'onde R dans même dérivation. Séquelle STEMI.", keys:["Q ≥ 40ms (≥ 1 petit carreau)","Q ≥ 25% de l'onde R","Séquelle de STEMI ancien","Localisation = territoire nécrosé"], hint:"Ondes Q larges et profondes = cicatrice myocardique. Territoire ?", opts:["Repolarisation précoce","Onde Q de nécrose","BBG","Péricardite"], ok:1 },
+  { id:38, cat:"ischémie", title:"Ondes T négatives ischémiques", short:"T négatives", diff:"moyen", shape:"t_neg", lead:"V4-V6", answer:"Ondes T négatives ischémiques", desc:"T inversées symétriques et profondes dans un territoire vasculaire. Ischémie transmurale ou post-STEMI.", keys:["T inversées SYMÉTRIQUES et profondes","Dans un territoire vasculaire","Symétriques (≠ T- asym. normales)","Post-STEMI ou ischémie transmurale"], hint:"T négatives symétriques dans un territoire cohérent (V1-V4, ou inférieures).", opts:["T normales","BBG","T négatives ischémiques","Hyperkaliémie"], ok:2 },
+  { id:39, cat:"ischémie", title:"Syndrome de De Winter", short:"De Winter", diff:"difficile", shape:"de_winter", lead:"V1-V6", answer:"Équivalent STEMI : Syndrome de De Winter", desc:"Sous-ST ≥ 1mm avec T amples et POSITIVES en V1-V6. Sous-décalage en point J avec T positive. Équivalent STEMI IVA. Urgence.", keys:["Sous-ST ≥ 1mm au J-point","T POSITIVES et amples après le sous-ST","Territoire V1-V6 (IVA)","ÉQUIVALENT STEMI → coronarographie urgente"], hint:"Sous-ST + T positives (pas négatives). Territoire antérieur = équivalent STEMI.", opts:["NSTEMI classique","Repolarisation précoce","De Winter (équivalent STEMI)","Hyperkaliémie"], ok:2 },
+  { id:40, cat:"ischémie", title:"Syndrome de Wellens A", short:"Wellens A", diff:"difficile", shape:"wellens_a", lead:"V2-V3", answer:"Syndrome de Wellens (Type A - T biphasique)", desc:"T biphasique (d'abord positive puis négative) en V2-V3. Signe de lésion sévère de l'IVA. Risque STEMI imminent.", keys:["T BIPHASIQUE en V2-V3 (+ puis -)","Ischémie critique de l'IVA","PAS de sus-ST au moment de l'ECG","RISQUE STEMI imminent → coronarographie"], hint:"T biphasique en V2-V3 chez un patient qui vient d'avoir une douleur thoracique = Wellens.", opts:["NSTEMI","Repolarisation précoce","Wellens A (T biphasique)","Péricardite"], ok:2 },
+  { id:41, cat:"ischémie", title:"Syndrome de Wellens B", short:"Wellens B", diff:"difficile", shape:"wellens_b", lead:"V2-V3", answer:"Syndrome de Wellens (Type B - T négative profonde)", desc:"T profondément négative et symétrique en V2-V3. Lésion sévère IVA. Plus fréquent (75%) que type A.", keys:["T NÉGATIVE PROFONDE et symétrique V2-V3","Plus fréquent (75% des Wellens)","IVA critique","→ Coronarographie urgente même sans douleur"], hint:"T profondément négative symétrique V2-V3 chez patient récemment douloureux = Wellens B.", opts:["NSTEMI","T négatives basales","Wellens B (T- profonde)","Péricardite"], ok:2 },
+  // MÉTABOLIQUE
+  { id:42, cat:"métabolique", title:"Hyperkaliémie", short:"Hyperkaliémie", diff:"difficile", shape:"hyperk", lead:"DII", answer:"Hyperkaliémie sévère (K+ > 5.5 mmol/L)", desc:"T pointues symétriques 'en tente' (K>5.5). QRS s'élargit. P disparaît. QRS sinusoïdal → FV. URGENCE.", keys:["T pointues SYMÉTRIQUES 'en tente'","QRS s'élargit (K>6.5)","P DISPARAÎT","QRS sinusoïdal → FV (K>7) → gluconate Ca2+"], hint:"T pointues symétriques + QRS larges + P absentes = hyperkaliémie sévère.", opts:["Repolarisation précoce","BBD","Hypokaliémie","Hyperkaliémie"], ok:3 },
+  { id:43, cat:"métabolique", title:"Hypokaliémie", short:"Hypokaliémie", diff:"moyen", shape:"hypok", lead:"DII", answer:"Hypokaliémie (K+ < 3.5 mmol/L)", desc:"T plates ou inversées + onde U proéminente (après T). Pseudo-allongement QT (= QU). Risque Torsades.", keys:["T plates ou NÉGATIVES","Onde U proéminente après la T","Pseudo-allongement QT (= QU réel)","Risque Torsades de Pointe → corriger K+"], hint:"T plates + onde U (après T) = hypokaliémie. Risque de Torsades.", opts:["Hyperkaliémie","Effet digitale","Hypokaliémie","QT long"], ok:2 },
+  { id:44, cat:"métabolique", title:"QT Long + Torsades de Pointe", short:"QT Long/TdP", diff:"difficile", shape:"qt_long", lead:"DII", answer:"QT Long + Torsades de Pointe", desc:"QTc > 450ms (H) / 460ms (F). Torsades = TV polymorphe sur fond QT long. Causes : HypoK/Mg, médicaments.", keys:["QTc > 450ms (H) / 460ms (F)","Bazett : QTc = QT/√RR","Torsades : TV polymorphe (axe qui tourne)","HypoK/Mg, médicaments, congénital"], hint:"QT allongé → risque Torsades de Pointe. Calculer QTc (Bazett).", opts:["FV","TV monomorphe","BAV 3°","QT Long + Torsades de Pointe"], ok:3 },
+  { id:45, cat:"métabolique", title:"Syndrome de Brugada", short:"Brugada", diff:"difficile", shape:"brugada", lead:"V1", answer:"Syndrome de Brugada (Type 1)", desc:"Sus-ST 'coved' convexe ≥ 2mm en V1 + T négative = Type 1. BBD incomplet. Homme < 50 ans. → DAI.", keys:["Sus-ST 'coved' CONVEXE ≥ 2mm en V1","T NÉGATIVE après le sus-ST","BBD incomplet","Homme < 50 ans — Fièvre démasque → DAI"], hint:"Sus-ST 'coved' (convexe, comme un toit de chalet) en V1 + T négative = Brugada.", opts:["STEMI V1","Péricardite","Repolarisation précoce","Brugada Type 1"], ok:3 },
+  { id:46, cat:"métabolique", title:"Effet Digitale", short:"Digitale", diff:"moyen", shape:"digitale", lead:"DII", answer:"Effet Digitale (signe de la cuillère)", desc:"Sous-décalage ST en cupule ('cuillère renversée'). T + ST forment une déflexion descendante puis remontante. BAV possible.", keys:["Sous-ST en CUPULE (cuillère renversée)","ST + T forment une déflexion creuse","BAV 1° ou 2° possible","≠ Ischémie : cupule vs horizontal/descendant"], hint:"Aspect en 'cuillère renversée' du segment ST. Penser à la digoxine.", opts:["NSTEMI","Ischémie sous-endo","Effet Digitale","Hypokaliémie"], ok:2 },
+  { id:47, cat:"métabolique", title:"Hypercalcémie", short:"Hypercalcémie", diff:"difficile", shape:"hypercalcemie", lead:"DII", answer:"Hypercalcémie (Ca2+ > 2.65 mmol/L)", desc:"QT COURT (QTc < 390ms). ST court ou absent. T normale. Cause : hyperparathyroïdie, cancer, immobilisation.", keys:["QT COURT (QTc < 390ms)","ST court ou absent","Peut donner arrêt cardiaque si sévère","Causes : hyperparathyroïdie, cancer, vit D"], hint:"QT court = chercher hypercalcémie.", opts:["QT Long","Repolarisation précoce","Hypercalcémie (QT court)","Brugada"], ok:2 },
+  { id:48, cat:"métabolique", title:"Hypocalcémie", short:"Hypocalcémie", diff:"difficile", shape:"hypocalcemie", lead:"DII", answer:"Hypocalcémie (Ca2+ < 2.15 mmol/L)", desc:"QT LONG par allongement du segment ST. T normale (≠ QT long par hypoK). Causes : hypoparathyroïdie, insuffisance rénale.", keys:["QT LONG par allongement du segment ST","T normale (≠ HypoK)","ST ALLONGÉ (pas d'onde U)","Causes : hypoparathyroïdie, IRC"], hint:"QT long avec ST allongé (pas d'onde U). Chercher hypocalcémie.", opts:["Hypokaliémie (onde U)","QT Long médicamenteux","Hypocalcémie (ST long)","Brugada"], ok:2 },
+  { id:49, cat:"métabolique", title:"Hypothermie (Onde J de Osborn)", short:"Hypothermie", diff:"difficile", shape:"hypothermie", lead:"DII", answer:"Hypothermie (Onde J de Osborn)", desc:"Onde J de Osborn : déflexion positive à la jonction QRS/ST. Sus-ST diffus. Bradycardie. T < 30°C.", keys:["Onde J de OSBORN (déflexion + fin QRS)","Sus-ST diffus (concave)","Bradycardie sinusale","Température < 30°C → urgence réchauffement"], hint:"Petite déflexion positive à la fin du QRS (entre QRS et ST) = onde J de Osborn.", opts:["Péricardite","Brugada","Repolarisation précoce","Hypothermie (onde J de Osborn)"], ok:3 },
+  // HYPERTROPHIES / AUTRES
+  { id:50, cat:"autre", title:"Hypertrophie Ventriculaire Gauche", short:"HVG (Sokolow)", diff:"moyen", shape:"hypertrophie_vg", lead:"V5", answer:"Hypertrophie Ventriculaire Gauche (HVG)", desc:"Voltages élevés (Sokolow-Lyon : SV1 + RV5 ou V6 > 35mm). Axe gauche. ST-T en surcharge. Critères Cornell.", keys:["Sokolow : S V1 + R V5/V6 > 35mm","Axe dévié à gauche","ST-T en surcharge (signe de strain)","Critères Cornell : R aVL + S V3 > 28mm (H)"], hint:"Grandes amplitudes + déviation axiale gauche + strain. Calculer Sokolow.", opts:["Normal","HVD","BBG","HVG"], ok:3 },
+  { id:51, cat:"autre", title:"Hypertrophie Ventriculaire Droite", short:"HVD (HTAP)", diff:"moyen", shape:"hypertrophie_vd", lead:"V1", answer:"Hypertrophie Ventriculaire Droite (HVD)", desc:"R dominante en V1 (R > S). Déviation axiale droite (> +90°). T négatives V1-V3. Causes : HTAP, CPC, Fallot.", keys:["R > S en V1 (R dominante)","Déviation axiale DROITE (> +90°)","T négatives V1-V3","Causes : HTAP, CPC, Fallot, RP"], hint:"R > S en V1 + déviation droite = HVD. Chercher HTAP.", opts:["BBD","HVG","HVD","EP"], ok:2 },
+  { id:52, cat:"autre", title:"Hémibloc Antérieur Gauche", short:"Hémib. Ant. G", diff:"difficile", shape:"hbag", lead:"DII", answer:"Hémibloc Antérieur Gauche", desc:"Déviation axiale GAUCHE marquée (-45° à -90°). QRS < 120ms. rS en DII/DIII/aVF. qR en DI/aVL. QRS fin.", keys:["Déviation axiale gauche -45° à -90°","QRS FIN (< 120ms)","rS DII/DIII/aVF — qR DI/aVL","Cause fréquente de déviation gauche"], hint:"Axe très négatif (-45 à -90°) + QRS fins = Hémibloc Antérieur Gauche.", opts:["BBG","Hémib. Post. G.","Hémib. Ant. G.","BAV 2° Mobitz I"], ok:2 },
+  { id:53, cat:"autre", title:"Hémibloc Postérieur Gauche", short:"Hémib. Post. G", diff:"difficile", shape:"hbpg", lead:"DII", answer:"Hémibloc Postérieur Gauche", desc:"Déviation axiale DROITE (+90° à +180°). QRS < 120ms. rS en DI/aVL. qR en DII/DIII/aVF. Diagnostic d'exclusion.", keys:["Déviation axiale droite +90° à +180°","QRS FIN (< 120ms)","rS DI/aVL — qR DII/DIII/aVF","Diagnostic d'exclusion (éliminer HVD, EP)"], hint:"Axe très à droite + QRS fins + pas d'autre cause = Hémibloc Postérieur Gauche.", opts:["HVD","BBD","Hémib. Ant. G.","Hémib. Post. G."], ok:3 },
+  { id:54, cat:"autre", title:"Onde P pulmonale", short:"P Pulmonale", diff:"moyen", shape:"onde_p_pulmonale", lead:"DII", answer:"Onde P Pulmonale (P pointue ≥ 2.5mm en DII)", desc:"P pointue ≥ 2.5mm en DII. Hypertrophie auriculaire droite. Causes : BPCO, HTAP, coeur pulmonaire chronique.", keys:["P ≥ 2.5mm en DII (pointue)","Hypertrophie auriculaire DROITE","Causes : BPCO, HTAP, CPC","Axe de P > +90°"], hint:"Onde P pointue et haute (≥ 2.5mm) en DII = P pulmonale = HVD auriculaire.", opts:["Onde P mitrale","P normale","P pulmonale (HVD)","Flutter auriculaire"], ok:2 },
+  { id:55, cat:"autre", title:"Onde P mitrale", short:"P Mitrale", diff:"moyen", shape:"onde_p_biventriculaire", lead:"DII", answer:"Onde P mitrale (P large et bifide)", desc:"P large ≥ 120ms et bifide ('double bosse') en DI/DII. Hypertrophie auriculaire gauche. Cause : RM, IAo, FA.", keys:["P ≥ 120ms (large)","P BIFIDE en DI/DII (double bosse)","Hypertrophie auriculaire GAUCHE","Causes : RM, IAo, CMH, FA"], hint:"P large et bifide = P mitrale = HAG. Chercher valvulopathie mitrale.", opts:["P pulmonale","P normale","Pré-excitation","P mitrale (HAG)"], ok:3 },
+  { id:56, cat:"autre", title:"Dysplasie Arythmogène VD (DAVD)", short:"Dyspl. Aryt. VD", diff:"difficile", shape:"onde_epsilon", lead:"V1-V2", answer:"Dysplasie Arythmogène du VD (DAVD)", desc:"Onde epsilon en V1 (petite déflexion après le QRS). T négatives V1-V3. BBD incomplet. Cause de mort subite chez jeune sportif.", keys:["Onde EPSILON (petite déflexion après QRS en V1)","T négatives V1-V3","BBD incomplet","Mort subite jeune sportif → IRM cardiaque"], hint:"Petite déflexion à la fin du QRS en V1 = onde epsilon. DAVD !", opts:["BBD","Brugada","DAVD (onde epsilon)","EP"], ok:2 },
+  { id:57, cat:"autre", title:"QT Court Congénital", short:"QT Court", diff:"difficile", shape:"hypercalcemie", lead:"DII", answer:"Syndrome du QT Court (QTc < 320ms)", desc:"QTc < 320ms. ST très court ou absent. Risque FV/mort subite. Rare. Traitement : DAI.", keys:["QTc < 320ms","ST très court ou absent","T abrupte et précoce","Risque FV → DAI"], hint:"QT très court + T abrupte sans ST = QT court congénital.", opts:["Hypercalcémie","QT court congénital","Repolarisation précoce","Effet digitale"], ok:1 },
+];
+
+var EXTRA_CASES = [
+  {
+    "cat": "rythme",
+    "title": "BAV 2:1 ambigu",
+    "short": "BAV 2:1",
+    "diff": "difficile",
+    "shape": "asystolie",
+    "lead": "DII",
+    "answer": "BAV 2° avec conduction 2:1",
+    "desc": "1 onde P sur 2 bloquée. Impossible de distinguer Mobitz I/II : le PR ne peut pas s'allonger avec 1 seul battement conduit. Nécessite ECG long ou manœuvre vagale.",
+    "keys": [
+      "1 P conduite : 1 P bloquée",
+      "PR CONSTANT (impossible de savoir si Mobitz I ou II)",
+      "Augmenter le ratio pour distinguer (atropine/effort)",
+      "Infrahissien si QRS larges → stimulateur"
+    ],
+    "hint": "FC ~75 avec P à 150 ? 2:1. Manœuvre vagale pour démasquer le pattern.",
+    "opts": [
+      "BAV 1°",
+      "BAV 2° Wenckebach",
+      "BAV 2° 2:1 (ambigu)",
+      "BAV 3°"
+    ],
+    "ok": 2,
+    "id": 100
+  },
+  {
+    "cat": "rythme",
+    "title": "Rythme idioventriculaire accéléré (RIVA)",
+    "short": "RIVA",
+    "diff": "difficile",
+    "shape": "vt",
+    "lead": "DII",
+    "answer": "Rythme Idioventriculaire Accéléré (RIVA)",
+    "desc": "Rythme ventriculaire large FC 60-120/min. Début/fin progressifs. Signe de reperfusion (après thrombolyse ou angioplastie). Bénin.",
+    "keys": [
+      "QRS LARGES FC 60-120/min",
+      "Début/fin PROGRESSIFS (non brutal)",
+      "Dissociation AV possible",
+      "Signe de REPERFUSION → bénin"
+    ],
+    "hint": "QRS larges mais FC modérée (60-120). Post-reperfusion = bénin, ne pas traiter.",
+    "opts": [
+      "TV",
+      "RIVA (reperfusion)",
+      "Rythme jonctionnel",
+      "BBG avec tachycardie"
+    ],
+    "ok": 1,
+    "id": 101
+  },
+  {
+    "cat": "rythme",
+    "title": "Tachycardie atriale focale",
+    "short": "Tachy Atriale",
+    "diff": "difficile",
+    "shape": "svt",
+    "lead": "DII",
+    "answer": "Tachycardie Atriale Focale",
+    "desc": "Ondes P' différentes de la P sinusale, FC 100-250/min. P' précède les QRS avec PR variable selon la FC. Foyer ectopique atrial.",
+    "keys": [
+      "P' ectopique (morphologie ≠ P sinusale)",
+      "FC 100-250/min",
+      "P' AVANT le QRS avec PR court",
+      "QRS fins (sauf aberration)"
+    ],
+    "hint": "Chercher la morphologie de la P' : est-elle différente de la P sinusale normale ?",
+    "opts": [
+      "Tachycardie sinusale",
+      "TSV (AVNRT)",
+      "Tachycardie atriale focale",
+      "Flutter 2:1"
+    ],
+    "ok": 2,
+    "id": 102
+  },
+  {
+    "cat": "rythme",
+    "title": "Tachycardie atriale multifocale (TAM)",
+    "short": "TAM",
+    "diff": "difficile",
+    "shape": "fa",
+    "lead": "DII",
+    "answer": "Tachycardie Atriale Multifocale (TAM)",
+    "desc": "≥3 morphologies de P différentes, RR irréguliers, FC > 100/min. Souvent BPCO/ICC. Peut mimer une FA.",
+    "keys": [
+      "≥ 3 morphologies d'ondes P DIFFÉRENTES",
+      "RR IRRÉGULIERS",
+      "FC > 100/min",
+      "Cause : BPCO, décompensation cardiaque"
+    ],
+    "hint": "Contrairement à la FA, on VOIT des ondes P distinctes mais de morphologies multiples (≥3).",
+    "opts": [
+      "FA",
+      "Flutter auriculaire",
+      "Tachycardie atriale multifocale",
+      "Tachycardie sinusale irrégulière"
+    ],
+    "ok": 2,
+    "id": 103
+  },
+  {
+    "cat": "rythme",
+    "title": "Bloc bifasciculaire (BBD + HBAG)",
+    "short": "Bifasciculaire",
+    "diff": "difficile",
+    "shape": "rbbb",
+    "lead": "DII",
+    "answer": "Bloc Bifasciculaire (BBD + Hémibloc Antérieur Gauche)",
+    "desc": "BBD (RSR' V1, S large V6) + déviation axiale gauche (-45° à -90°). 2 des 3 fascicules atteints. Risque de bloc trifasciculaire.",
+    "keys": [
+      "BBD : RSR' V1 + S large V6",
+      "Axe gauche -45° à -90°",
+      "QRS ≥ 120ms",
+      "Surveillance : risque BAV 3° si PR s'allonge"
+    ],
+    "hint": "BBD + axe gauche marqué = bifasciculaire. Surveiller le PR !",
+    "opts": [
+      "BBD seul",
+      "BBG",
+      "Bifasciculaire (BBD + HBAG)",
+      "BAV 2° Mobitz II"
+    ],
+    "ok": 2,
+    "id": 104
+  },
+  {
+    "cat": "rythme",
+    "title": "Bloc trifasciculaire",
+    "short": "Trifasciculaire",
+    "diff": "difficile",
+    "shape": "rbbb",
+    "lead": "DII",
+    "answer": "Bloc Trifasciculaire",
+    "desc": "BBD + HBAG + BAV 1° (PR allongé). Les 3 fascicules sont atteints. Précède souvent un BAV complet. → Stimulateur cardiaque.",
+    "keys": [
+      "BBD + Hémibloc + PR ALLONGÉ",
+      "3 fascicules atteints",
+      "→ Stimulateur cardiaque préventif",
+      "Risque BAV 3° imminent"
+    ],
+    "hint": "BBD + hémibloc + PR long = trifasciculaire. Urgence de stimulation.",
+    "opts": [
+      "BAV 1° + BBD",
+      "Bloc bifasciculaire",
+      "Trifasciculaire",
+      "BAV 3° avec BBD"
+    ],
+    "ok": 2,
+    "id": 105
+  },
+  {
+    "cat": "rythme",
+    "title": "TV catécholaminergique (effort)",
+    "short": "TV effort",
+    "diff": "difficile",
+    "shape": "tv_polymorphe",
+    "lead": "DII",
+    "answer": "TV Catécholaminergique Polymorphe (TVPC)",
+    "desc": "TV bidirectionnelle ou polymorphe à l'effort/émotion. Cœur structurellement normal. Mutation RyR2. Risque mort subite chez le jeune.",
+    "keys": [
+      "TV BIDIRECTIONNELLE à l'effort (alternance d'axe)",
+      "Cœur normal à l'écho",
+      "Mutation RYR2 (canal calcique SR)",
+      "Traitement : bêtabloquants + DAI"
+    ],
+    "hint": "Jeune, TV à l'effort, ECG repos normal. Penser TVPC.",
+    "opts": [
+      "TV sur cardiopathie",
+      "Torsades de pointes",
+      "TV catécholaminergique polymorphe",
+      "FV d'effort"
+    ],
+    "ok": 2,
+    "id": 106
+  },
+  {
+    "cat": "rythme",
+    "title": "Undersensing du pacemaker",
+    "short": "Undersensing PM",
+    "diff": "difficile",
+    "shape": "pacemaker",
+    "lead": "DII",
+    "answer": "Dysfonction de pacemaker — Undersensing",
+    "desc": "Le pacemaker ne détecte pas l'activité intrinsèque et stimule en compétition. Spikes en dehors de la période réfractaire. Risque de TV si spike sur T.",
+    "keys": [
+      "Spikes PENDANT l'activité intrinsèque",
+      "Pacemaker en COMPÉTITION avec le rythme propre",
+      "Spike sur onde T → risque TV/FV",
+      "Cause : sensibilité trop basse, fracture de sonde"
+    ],
+    "hint": "Des spikes apparaissent malgré un rythme sinusal normal = undersensing.",
+    "opts": [
+      "Oversensing PM",
+      "Undersensing PM",
+      "BAV 3° avec pacemaker",
+      "Inhibition inappropriée"
+    ],
+    "ok": 1,
+    "id": 107
+  },
+  {
+    "cat": "rythme",
+    "title": "Oversensing du pacemaker",
+    "short": "Oversensing PM",
+    "diff": "difficile",
+    "shape": "pacemaker",
+    "lead": "DII",
+    "answer": "Dysfonction de pacemaker — Oversensing",
+    "desc": "Le pacemaker détecte des signaux parasites (myopotentiels, T waves) et s'inhibe. Pauses prolongées chez un patient PM-dépendant. Danger.",
+    "keys": [
+      "PAUSES prolongées chez patient PM-dépendant",
+      "Inhibition par signaux parasites (T-wave, myopotentiels)",
+      "Pas de spike attendu",
+      "Cause : sensibilité trop élevée, fracture d'isolant"
+    ],
+    "hint": "Pauses inexpliquées avec disparition des spikes chez un patient pacemaker-dépendant.",
+    "opts": [
+      "Undersensing PM",
+      "Oversensing PM",
+      "Pause sinusale",
+      "BAV 3°"
+    ],
+    "ok": 1,
+    "id": 108
+  },
+  {
+    "cat": "rythme",
+    "title": "Flutter auriculaire atypique",
+    "short": "Flutter atypique",
+    "diff": "difficile",
+    "shape": "flutter",
+    "lead": "DII",
+    "answer": "Flutter Auriculaire Atypique (non isthmo-dépendant)",
+    "desc": "Ondes de flutter sans aspect typique en dents de scie. FC auriculaire variable (200-350/min). Souvent post-ablation ou post-chirurgie cardiaque.",
+    "keys": [
+      "Ondes flutter ATYPIQUES (pas de dents de scie classiques)",
+      "FC auriculaire 200-350/min variable",
+      "Souvent post-ablation/chirurgie",
+      "Traitement : ablation ou cardioversion"
+    ],
+    "hint": "Aspect de flutter mais ondes auriculaires irrégulières ou de morphologie inhabituelle.",
+    "opts": [
+      "FA",
+      "Flutter typique isthmo-dépendant",
+      "Flutter atypique",
+      "Tachycardie atriale focale"
+    ],
+    "ok": 2,
+    "id": 109
+  },
+  {
+    "cat": "rythme",
+    "title": "WPW + FA rapide (DANGER)",
+    "short": "WPW+FA DANGER",
+    "diff": "difficile",
+    "shape": "wpw",
+    "lead": "DII",
+    "answer": "WPW avec FA à conduction rapide (PRÉ-EXCITÉE) — URGENCE",
+    "desc": "FA + WPW = conduction rapide via faisceau accessoire. QRS larges irréguliers FC > 200/min. Peut dégénérer en FV. CONTRE-INDICATION aux bloqueurs du nœud AV !",
+    "keys": [
+      "QRS LARGES + IRRÉGULIERS FC > 200/min",
+      "Aspect pré-excité dans la FA",
+      "CONTRE-INDICATION : adénosine, vérapamil, digoxine",
+      "TRAITEMENT : cardioversion électrique ou procainamide"
+    ],
+    "hint": "FA + QRS larges irréguliers très rapides = WPW pré-excité. NE PAS bloquer le nœud AV !",
+    "opts": [
+      "FA avec aberration",
+      "TV",
+      "FA sur WPW (URGENCE)",
+      "Flutter 1:1"
+    ],
+    "ok": 2,
+    "id": 110
+  },
+  {
+    "cat": "rythme",
+    "title": "Dissociation isorhythmique",
+    "short": "Dissoc. isorythm.",
+    "diff": "difficile",
+    "shape": "jonctionnel",
+    "lead": "DII",
+    "answer": "Dissociation Isorhythmique",
+    "desc": "Sinus et jonction battent à la MÊME fréquence (~70/min chacun) mais indépendamment. Les P 'flottent' autour des QRS (avant, dedans, après). CE N'EST PAS un BAV 3° : dans le BAV 3°, les ventricules s'échappent lentement (30-40/min). Ici les deux FC sont similaires. Bénin.",
+    "keys": [
+      "P et QRS indépendants MAIS à FC SIMILAIRES (~70/min)",
+      "P 'flotte' : avant/dans/après le QRS selon les cycles",
+      "≠ BAV 3° : pas de ventricules lents (30-40/min)",
+      "Causes : digitaliques, post-op, hypoK — bénin"
+    ],
+    "hint": "Piège classique du BAV 3° : ici les deux FC sont SIMILAIRES (~70/min). Dans le BAV 3°, les QRS sont lents (30-40/min).",
+    "opts": [
+      "BAV 3°",
+      "Rythme jonctionnel",
+      "Dissociation isorhythmique",
+      "BAV 2° Mobitz II"
+    ],
+    "ok": 2,
+    "id": 111
+  },
+  {
+    "cat": "rythme",
+    "title": "ESV en couplage variable (parasystolie)",
+    "short": "Parasystolie V",
+    "diff": "difficile",
+    "shape": "extrasystoles_v",
+    "lead": "DII",
+    "answer": "Parasystolie Ventriculaire",
+    "desc": "ESV avec intervalle de couplage VARIABLE. Rythme parasystolique fixe indépendant. Intervalle interectopique constant (multiples). Bénin mais mérite investigation.",
+    "keys": [
+      "Couplage VARIABLE des ESV",
+      "Intervalle interectopique CONSTANT (fixe)",
+      "Battements de fusion",
+      "Foyer ventriculaire indépendant protégé"
+    ],
+    "hint": "Si le couplage varie mais que l'intervalle entre ESV est fixe (ou multiple), c'est une parasystolie.",
+    "opts": [
+      "ESV monomorphes",
+      "Bigéminisme",
+      "Parasystolie ventriculaire",
+      "TV lente"
+    ],
+    "ok": 2,
+    "id": 112
+  },
+  {
+    "cat": "rythme",
+    "title": "Tachycardie sinusale inappropriée",
+    "short": "TSI",
+    "diff": "moyen",
+    "shape": "tachy_sinus",
+    "lead": "DII",
+    "answer": "Tachycardie Sinusale Inappropriée (TSI)",
+    "desc": "FC > 100/min au repos avec P sinusale normale, sans cause déclenchante. Diagnostic d'exclusion. Jeune femme. Dysautonomie. Impact QDV.",
+    "keys": [
+      "FC > 100/min AU REPOS",
+      "Ondes P sinusales normales",
+      "Aucune cause déclenchante",
+      "Diagnostic d'exclusion — dysautonomie"
+    ],
+    "hint": "Tachycardie sinusale persistante chez une jeune femme sans cause. Penser TSI.",
+    "opts": [
+      "Tachycardie sinusale réactionnelle",
+      "TSI",
+      "POTS",
+      "Hyperthyroïdie"
+    ],
+    "ok": 1,
+    "id": 113
+  },
+  {
+    "cat": "rythme",
+    "title": "POTS (Tachycardie orthostatique posturale)",
+    "short": "POTS",
+    "diff": "difficile",
+    "shape": "tachy_sinus",
+    "lead": "DII",
+    "answer": "POTS — Syndrome de Tachycardie Orthostatique Posturale",
+    "desc": "Augmentation FC ≥ 30/min (ou FC > 120) au passage clinostatisme → orthostatisme, sans hypotension. ECG : tachycardie sinusale à l'orthostatisme.",
+    "keys": [
+      "↑ FC ≥ 30/min en orthostatisme",
+      "PAS d'hypotension orthostatique",
+      "P sinusale normale",
+      "Jeune femme, post-COVID fréquent"
+    ],
+    "hint": "La FC monte beaucoup en se levant sans chute tensionnelle. POTS.",
+    "opts": [
+      "Hypotension orthostatique",
+      "Tachycardie sinusale réactionnelle",
+      "POTS",
+      "TSI"
+    ],
+    "ok": 2,
+    "id": 114
+  },
+  {
+    "cat": "ischémie",
+    "title": "STEMI antéro-septal (V1-V3)",
+    "short": "STEMI antéro-sept",
+    "diff": "difficile",
+    "shape": "stemi_ant",
+    "lead": "V1-V3",
+    "answer": "STEMI Antéro-Septal (V1-V3)",
+    "desc": "Sus-ST en V1-V3. Occlusion IVA proximale. Risque BAV, BBG ischémique, dysfonction systolique sévère. Urgence coronarographique.",
+    "keys": [
+      "Sus-ST V1-V3",
+      "Occlusion IVA PROXIMALE",
+      "Risque BAV + BBG ischémique",
+      "→ Coronarographie en urgence"
+    ],
+    "hint": "Sus-ST localisé à V1-V3 = territoire septal, IVA proximale, pronostic sévère.",
+    "opts": [
+      "Péricardite",
+      "STEMI antérieur étendu",
+      "STEMI antéro-septal",
+      "Repolarisation précoce"
+    ],
+    "ok": 2,
+    "id": 115
+  },
+  {
+    "cat": "ischémie",
+    "title": "STEMI étendu antéro-latéral",
+    "short": "STEMI étendu",
+    "diff": "difficile",
+    "shape": "stemi_ant",
+    "lead": "V1-V6",
+    "answer": "STEMI Étendu Antéro-Latéral (V1-V6 + DI/aVL)",
+    "desc": "Sus-ST de V1 à V6 + DI/aVL. Occlusion tronc commun ou IVA très proximale. Mortalité élevée. Choc cardiogénique fréquent.",
+    "keys": [
+      "Sus-ST V1 à V6 + DI/aVL",
+      "Territoire TRÈS ÉTENDU",
+      "Occlusion tronc commun ou IVA↑↑",
+      "Risque choc cardiogénique élevé"
+    ],
+    "hint": "Quand le sus-ST touche tout (V1-V6 + latérales), penser occlusion tronc commun.",
+    "opts": [
+      "STEMI antérieur simple",
+      "STEMI antéro-latéral étendu",
+      "Péricardite diffuse",
+      "Myocardite"
+    ],
+    "ok": 1,
+    "id": 116
+  },
+  {
+    "cat": "ischémie",
+    "title": "Séquelle ancienne antérieure",
+    "short": "Séquelle ant.",
+    "diff": "moyen",
+    "shape": "onde_q",
+    "lead": "V1-V4",
+    "answer": "Séquelle d'Infarctus Antérieur Ancien (onde Q + T-)",
+    "desc": "Ondes Q de nécrose en V1-V4, T négatives persistantes, ST normal. Pas d'élévation aiguë. Cicatrice d'infarctus ancien. Dyskinésie possible.",
+    "keys": [
+      "Ondes Q en V1-V4 (nécrose ancienne)",
+      "T négatives persistantes",
+      "PAS de sus-ST actif",
+      "Écho : akinésie/dyskinésie antérieure"
+    ],
+    "hint": "Q + T- sans sus-ST = séquelle, pas d'urgence. Mais chercher le bilan de cardiopathie ischémique.",
+    "opts": [
+      "STEMI en cours",
+      "NSTEMI",
+      "Séquelle d'IDM antérieur ancien",
+      "BBG"
+    ],
+    "ok": 2,
+    "id": 117
+  },
+  {
+    "cat": "ischémie",
+    "title": "Tako-Tsubo",
+    "short": "Tako-Tsubo",
+    "diff": "difficile",
+    "shape": "t_neg",
+    "lead": "V3-V6",
+    "answer": "Cardiomyopathie de Tako-Tsubo (syndrome de stress)",
+    "desc": "ST sus ou sous-décalé puis T- diffuses en V3-V6 chez une femme âgée après stress émotionnel/physique. Ballonnisation apicale. QT long. Récupération en 4-6 semaines.",
+    "keys": [
+      "Femme > 60 ans, STRESS déclenchant",
+      "Sus-ST initial puis T- profondes diffuses",
+      "QT ALLONGÉ (risque torsades)",
+      "Écho : ballonnisation apicale — coronaires saines"
+    ],
+    "hint": "T- profuses post-stress chez femme âgée, coronaires normales à la coro. Tako-Tsubo.",
+    "opts": [
+      "NSTEMI",
+      "Myocardite",
+      "Tako-Tsubo",
+      "STEMI antérieur"
+    ],
+    "ok": 2,
+    "id": 118
+  },
+  {
+    "cat": "ischémie",
+    "title": "Myocardite aiguë",
+    "short": "Myocardite",
+    "diff": "difficile",
+    "shape": "pericardite",
+    "lead": "DII",
+    "answer": "Myocardite Aiguë",
+    "desc": "Sus-ST diffus (sans miroir, sans territoire), douleur thoracique, jeune patient, contexte viral. Troponine élevée. Différent de la péricardite : T- précoces, arythmies fréquentes.",
+    "keys": [
+      "Sus-ST DIFFUS (tous les territoires)",
+      "Pas d'image en miroir",
+      "T- peuvent apparaître tôt",
+      "Contexte : jeune + syndrome viral"
+    ],
+    "hint": "Sus-ST diffus chez un jeune après grippe/COVID = myocardite jusqu'à preuve du contraire.",
+    "opts": [
+      "STEMI antéro-latéral",
+      "Péricardite aiguë",
+      "Myocardite aiguë",
+      "Repolarisation précoce"
+    ],
+    "ok": 2,
+    "id": 119
+  },
+  {
+    "cat": "ischémie",
+    "title": "Angine de Prinzmetal",
+    "short": "Prinzmetal",
+    "diff": "difficile",
+    "shape": "stemi_inf",
+    "lead": "DII",
+    "answer": "Angor de Prinzmetal (spasme coronarien)",
+    "desc": "Sus-ST transitoire, souvent la nuit ou au repos, résolutif spontanément. Coronaires normales. Sus-ST disparaît avec les dérivés nitrés.",
+    "keys": [
+      "Sus-ST TRANSITOIRE au repos/nuit",
+      "Résolutif spontanément ou avec dérivés nitrés",
+      "Coronaires saines (spasme)",
+      "Holter ECG : documenter l'épisode"
+    ],
+    "hint": "Sus-ST nocturne, au repos, transitoire, chez un patient sans facteurs de risque classiques.",
+    "opts": [
+      "STEMI",
+      "Repolarisation précoce",
+      "Angor de Prinzmetal",
+      "Péricardite"
+    ],
+    "ok": 2,
+    "id": 120
+  },
+  {
+    "cat": "ischémie",
+    "title": "STEMI avec BBG (Sgarbossa)",
+    "short": "STEMI+BBG Sgarbossa",
+    "diff": "difficile",
+    "shape": "lbbb",
+    "lead": "V1-V6",
+    "answer": "STEMI en présence de BBG — Critères de Sgarbossa",
+    "desc": "BBG + sus-ST CONCORDANT (même sens que le QRS) ≥ 1mm, ou sus-ST ≥ 5mm DISCORDANT, ou sous-ST concordant en V1-V3. Diagnostiquer un STEMI sous BBG.",
+    "keys": [
+      "Sus-ST CONCORDANT ≥ 1mm (même sens que QRS)",
+      "Sus-ST discordant EXCESSIF ≥ 5mm",
+      "Sous-ST concordant V1-V3",
+      "Urgence : ne pas se laisser dérouter par le BBG"
+    ],
+    "hint": "BBG + sus-ST dans le même sens que le QRS dominant = STEMI. Critère de Sgarbossa.",
+    "opts": [
+      "BBG seul (pas d'ischémie)",
+      "STEMI antérieur sans BBG",
+      "STEMI + BBG (Sgarbossa positif)",
+      "Hyperkaliémie sur BBG"
+    ],
+    "ok": 2,
+    "id": 121
+  },
+  {
+    "cat": "ischémie",
+    "title": "Anévrisme ventriculaire gauche",
+    "short": "Anévrisme VG",
+    "diff": "difficile",
+    "shape": "stemi_ant",
+    "lead": "V1-V4",
+    "answer": "Anévrisme Ventriculaire Gauche",
+    "desc": "Sus-ST PERSISTANT en V1-V4 des semaines/mois après un IDM antérieur. Q de nécrose + sus-ST figé. Pas d'urgence coronaire. Écho : dyskinésie.",
+    "keys": [
+      "Sus-ST persistant semaines/mois post-IDM",
+      "Q de nécrose en V1-V4",
+      "Sus-ST FIGÉ (ne varie pas)",
+      "Écho : dyskinésie antérieure = anévrisme"
+    ],
+    "hint": "Sus-ST chronique + Q de nécrose post-IDM ancien = anévrisme ventriculaire, pas de reocclusion.",
+    "opts": [
+      "STEMI en cours",
+      "Repolarisation précoce",
+      "Anévrisme VG post-IDM",
+      "Péricardite chronique"
+    ],
+    "ok": 2,
+    "id": 122
+  },
+  {
+    "cat": "ischémie",
+    "title": "STEMI inférieur + BAV 2° Wenckebach",
+    "short": "STEMI inf + BAV2",
+    "diff": "difficile",
+    "shape": "stemi_inf",
+    "lead": "DII",
+    "answer": "STEMI Inférieur avec BAV 2° Wenckebach",
+    "desc": "Sus-ST DII/DIII/aVF + PR s'allongeant progressivement avec P bloquée. Ischémie du nœud AV (artère coronaire droite). Souvent transitoire et réversible.",
+    "keys": [
+      "Sus-ST DII/DIII/aVF",
+      "PR s'allongeant → P bloquée (Wenckebach)",
+      "Ischémie du nœud AV par CD",
+      "Souvent réversible avec reperfusion"
+    ],
+    "hint": "STEMI inférieur + Wenckebach = ischémie du nœud AV par l'artère coronaire droite. Bénin si reperfusé.",
+    "opts": [
+      "STEMI inférieur sans trouble conductif",
+      "STEMI inférieur + BAV 1°",
+      "STEMI inférieur + BAV 2° Wenckebach",
+      "STEMI inférieur + BAV 3°"
+    ],
+    "ok": 2,
+    "id": 123
+  },
+  {
+    "cat": "ischémie",
+    "title": "Contusion myocardique traumatique",
+    "short": "Contusion myo.",
+    "diff": "difficile",
+    "shape": "t_neg",
+    "lead": "V1-V4",
+    "answer": "Contusion Myocardique Traumatique",
+    "desc": "Trauma thoracique + ECG anormal : T- V1-V3, sus-ST ou arythmies. Troponine élevée. Ressemble à un STEMI mais contexte traumatique. Monitoring 24-48h obligatoire.",
+    "keys": [
+      "Contexte TRAUMATIQUE (accident, chute)",
+      "T- ou sus-ST en V1-V3",
+      "Troponine élevée",
+      "Monitoring 24-48h — risque TV/FV"
+    ],
+    "hint": "Trauma thoracique + ECG anormal = contusion myocardique. Monitorer !",
+    "opts": [
+      "STEMI antérieur spontané",
+      "Péricardite",
+      "Contusion myocardique",
+      "Myocardite"
+    ],
+    "ok": 2,
+    "id": 124
+  },
+  {
+    "cat": "métabolique",
+    "title": "Intoxication aux tricycliques",
+    "short": "Tricycliques",
+    "diff": "difficile",
+    "shape": "rbbb",
+    "lead": "DII",
+    "answer": "Intoxication aux Antidépresseurs Tricycliques",
+    "desc": "QRS LARGES (blocage des canaux sodiques), QT long, déviation axiale droite, onde R en aVR ≥ 3mm. Risque TV/FV et convulsions. Antidote : bicarbonate.",
+    "keys": [
+      "QRS LARGES ≥ 120ms (blocage Na+)",
+      "QT LONG",
+      "Onde R en aVR ≥ 3mm (signe clé)",
+      "Traitement : bicarbonate de sodium IV"
+    ],
+    "hint": "QRS larges + R dominant en aVR chez intoxiqué = tricycliques. Bicarbonate !",
+    "opts": [
+      "Hyperkaliémie",
+      "BBD",
+      "Intoxication aux tricycliques",
+      "WPW"
+    ],
+    "ok": 2,
+    "id": 125
+  },
+  {
+    "cat": "métabolique",
+    "title": "Cardiomyopathie hypertrophique (CMH)",
+    "short": "CMH",
+    "diff": "difficile",
+    "shape": "hypertrophie_vg",
+    "lead": "V5-V6",
+    "answer": "Cardiomyopathie Hypertrophique (CMH)",
+    "desc": "HVG électrique, ondes Q septales en V5-V6/DI/aVL (pseudo-infarctus), T négatives. Peut ressembler à un IDM. Cause de mort subite du sportif jeune.",
+    "keys": [
+      "HVG électrique (Sokolow > 35mm)",
+      "Ondes Q SEPTALES V5-V6 (pseudo-infarctus)",
+      "T négatives profondes",
+      "Mort subite chez jeune sportif"
+    ],
+    "hint": "HVG avec Q en latérales chez un jeune sportif = CMH jusqu'à preuve du contraire.",
+    "opts": [
+      "HVG essentielle",
+      "IDM latéral ancien",
+      "CMH",
+      "Syndrome de Wolff-Parkinson-White"
+    ],
+    "ok": 2,
+    "id": 126
+  },
+  {
+    "cat": "métabolique",
+    "title": "Amyloïdose cardiaque",
+    "short": "Amyloïdose",
+    "diff": "difficile",
+    "shape": "hypertrophie_vg",
+    "lead": "DII",
+    "answer": "Amyloïdose Cardiaque",
+    "desc": "BAS VOLTAGES paradoxaux (< 5mm périphériques) malgré HVG échocardiographique. Pseudo-Q en V1-V4 (pseudo-infarctus). Pattern classique : 'small voltage + thick heart'.",
+    "keys": [
+      "BAS VOLTAGES paradoxaux (< 5mm périphériques)",
+      "HVG à l'écho MALGRÉ bas voltages (dissociation)",
+      "Pseudo-Q en V1-V4",
+      "FA fréquente, mauvais pronostic"
+    ],
+    "hint": "Bas voltages ECG + hypertrophie à l'écho = amyloïdose jusqu'à preuve du contraire.",
+    "opts": [
+      "Péricardite chronique",
+      "Hypothyroïdie",
+      "Amyloïdose cardiaque",
+      "BPCO"
+    ],
+    "ok": 2,
+    "id": 127
+  },
+  {
+    "cat": "métabolique",
+    "title": "Sarcoïdose cardiaque",
+    "short": "Sarcoïdose card.",
+    "diff": "difficile",
+    "shape": "bav2m2",
+    "lead": "DII",
+    "answer": "Sarcoïdose Cardiaque",
+    "desc": "BAV de haut degré, BBD ou BBG, TV chez un sujet jeune. Peut être la première manifestation. Granulomes dans le système de conduction. IRM cardiaque diagnostique.",
+    "keys": [
+      "BAV de haut degré chez JEUNE (< 55 ans)",
+      "BBD ou BBG inexpliqué",
+      "TV ou ESV fréquentes",
+      "IRM : prise de contraste tardive (granulomes)"
+    ],
+    "hint": "BAV inexpliqué chez un jeune adulte sans cardiopathie évidente = penser sarcoïdose.",
+    "opts": [
+      "Maladie de Lenegre",
+      "BAV idiopathique",
+      "Sarcoïdose cardiaque",
+      "Myocardite virale"
+    ],
+    "ok": 2,
+    "id": 128
+  },
+  {
+    "cat": "métabolique",
+    "title": "Alcoolisme aigu (FA du samedi soir)",
+    "short": "FA alcool",
+    "diff": "moyen",
+    "shape": "fa",
+    "lead": "DII",
+    "answer": "FA Paroxystique d'Origine Alcoolique ('Holiday Heart')",
+    "desc": "FA paroxystique après consommation excessive d'alcool. Patient sans cardiopathie connue. Cardioversion spontanée en 24-48h après sevrage souvent possible.",
+    "keys": [
+      "FA paroxystique",
+      "Contexte : consommation alcool importante",
+      "Cœur sain par ailleurs",
+      "Cardioversion spontanée fréquente après sevrage"
+    ],
+    "hint": "FA chez un jeune sans cardiopathie après une soirée alcoolisée = Holiday Heart.",
+    "opts": [
+      "FA chronique",
+      "Flutter auriculaire",
+      "FA paroxystique alcoolique (Holiday Heart)",
+      "TSV"
+    ],
+    "ok": 2,
+    "id": 129
+  },
+  {
+    "cat": "métabolique",
+    "title": "Hyperthyroïdie",
+    "short": "Hyperthyroïdie",
+    "diff": "moyen",
+    "shape": "tachy_sinus",
+    "lead": "DII",
+    "answer": "Hyperthyroïdie — Manifestations ECG",
+    "desc": "Tachycardie sinusale persistante, FA fréquente (20% des hyperthyroïdies), intervalles raccourcis. ECG non spécifique mais contexte clinique clé.",
+    "keys": [
+      "Tachycardie sinusale persistante",
+      "FA possible (20% des cas)",
+      "Intervalles PR et QT raccourcis",
+      "Bilan TSH/T4 obligatoire"
+    ],
+    "hint": "Tachycardie persistante sans cause évidente chez un patient avec amaigrissement/sueurs = TSH !",
+    "opts": [
+      "Tachycardie sinusale réactionnelle",
+      "POTS",
+      "Hyperthyroïdie",
+      "TSI"
+    ],
+    "ok": 2,
+    "id": 130
+  },
+  {
+    "cat": "métabolique",
+    "title": "Phéochromocytome",
+    "short": "Phéochromocytome",
+    "diff": "difficile",
+    "shape": "hypertrophie_vg",
+    "lead": "V5",
+    "answer": "Phéochromocytome — Manifestations ECG",
+    "desc": "HVG, T négatives diffuses (catécholamines), QT long, tachycardie paroxystique avec HTA. Peut mimer un STEMI ou une myocardite. Dosage métanéphrines urinaires.",
+    "keys": [
+      "HVG + T négatives DIFFUSES",
+      "Tachycardie paroxystique + HTA",
+      "QT long (risque torsades)",
+      "Diagnostic : métanéphrines urinaires/plasmatiques"
+    ],
+    "hint": "HTA paroxystique + palpitations + T- diffuses = phéochromocytome. Doser les métanéphrines.",
+    "opts": [
+      "HVG essentielle",
+      "Myocardite",
+      "Phéochromocytome",
+      "Tako-Tsubo"
+    ],
+    "ok": 2,
+    "id": 131
+  },
+  {
+    "cat": "métabolique",
+    "title": "Acidocétose diabétique (HyperK associée)",
+    "short": "ACD + HyperK",
+    "diff": "difficile",
+    "shape": "hyperk",
+    "lead": "DII",
+    "answer": "Acidocétose Diabétique avec Hyperkaliémie",
+    "desc": "T pointues et symétriques (hyperkaliémie), QRS s'élargissant, contexte diabétique. Hyperkaliémie faussement rassurante : le K total est bas (déplétion intracellulaire).",
+    "keys": [
+      "T POINTUES symétriques (hyperkaliémie)",
+      "QRS s'élargissant (toxicité K+)",
+      "Contexte : diabète type 1, polyurie/polydipsie",
+      "K+ sérique élevé MAIS K+ total bas → risque d'hypoK à la correction"
+    ],
+    "hint": "T pointues + contexte diabétique = ACD avec hyperK. Attention à l'hypokaliémie de rebond.",
+    "opts": [
+      "Hyperkaliémie isolée",
+      "Acidocétose diabétique + hyperkaliémie",
+      "IDM inférieur",
+      "Hyperkaliémie sur IRC"
+    ],
+    "ok": 1,
+    "id": 132
+  },
+  {
+    "cat": "métabolique",
+    "title": "Hypomagnésémie",
+    "short": "HypoMg",
+    "diff": "difficile",
+    "shape": "qt_long",
+    "lead": "DII",
+    "answer": "Hypomagnésémie",
+    "desc": "QT long, ondes U proéminentes, T aplaties. Similaire à l'hypokaliémie. Souvent associée. Cause : diurétiques, alcoolisme, malnutrition. Favorise les torsades.",
+    "keys": [
+      "QT long",
+      "Ondes U proéminentes",
+      "T aplaties (similaire hypoK)",
+      "Cause : diurétiques, alcoolisme — risque torsades"
+    ],
+    "hint": "QT long + U proéminentes + contexte de malnutrition ou alcoolisme = hypoMg.",
+    "opts": [
+      "Hypokaliémie",
+      "Hypomagnésémie",
+      "QT long congénital",
+      "Effet digitale"
+    ],
+    "ok": 1,
+    "id": 133
+  },
+  {
+    "cat": "métabolique",
+    "title": "Hypothyroïdie",
+    "short": "Hypothyroïdie",
+    "diff": "moyen",
+    "shape": "brady_sinus",
+    "lead": "DII",
+    "answer": "Hypothyroïdie — Manifestations ECG",
+    "desc": "Bradycardie sinusale, bas voltages diffus, QT long, T aplaties ou inversées, bloc AV 1°. Épanchement péricardique possible (bas voltages + alternance électrique).",
+    "keys": [
+      "Bradycardie sinusale",
+      "Bas voltages diffus (< 5mm périphériques)",
+      "QT long, T aplaties/inversées",
+      "BAV 1° possible — chercher TSH"
+    ],
+    "hint": "Bradycardie + bas voltages + QT long = chercher hypothyroïdie (TSH).",
+    "opts": [
+      "Bradycardie sinusale simple",
+      "Hypothyroïdie",
+      "Péricardite avec épanchement",
+      "Amyloïdose"
+    ],
+    "ok": 1,
+    "id": 134
+  },
+  {
+    "cat": "autre",
+    "title": "Dextrocardie",
+    "short": "Dextrocardie",
+    "diff": "difficile",
+    "shape": "sinus",
+    "lead": "DI",
+    "answer": "Dextrocardie Vraie",
+    "desc": "Axe DI inversé (P et QRS négatifs en DI), onde R décroissante V1→V6 (inverse du normal), R dominant en aVR. Vérifier l'absence d'inversion d'électrodes.",
+    "keys": [
+      "P et QRS NÉGATIFS en DI",
+      "aVR ressemble à aVL normal",
+      "R décroissant V1→V6 (inverse du normal)",
+      "Différencier de l'inversion des électrodes bras"
+    ],
+    "hint": "ECG 'à l'envers' avec P et QRS négatifs en DI. Vérifier les électrodes, ou dextrocardie vraie.",
+    "opts": [
+      "Inversion des électrodes bras",
+      "Dextrocardie vraie",
+      "BAV 3° avec axe très à droite",
+      "BBG avec axe droit"
+    ],
+    "ok": 1,
+    "id": 135
+  },
+  {
+    "cat": "autre",
+    "title": "Inversion des électrodes membres",
+    "short": "Inversion électr.",
+    "diff": "moyen",
+    "shape": "sinus",
+    "lead": "DI",
+    "answer": "Inversion des Électrodes Membres (bras droit/gauche)",
+    "desc": "Onde P et QRS négatifs en DI, aVR avec aspect 'normal' (P+ QRS+). Ressemble à la dextrocardie MAIS les précordiales V1-V6 sont normales.",
+    "keys": [
+      "P et QRS NÉGATIFS en DI",
+      "aVR ressemble à DI normal (P+ QRS+)",
+      "PRÉCORDIALES V1-V6 NORMALES (différence clé vs dextrocardie)",
+      "Artefact technique → recommencer l'ECG"
+    ],
+    "hint": "Inversion bras : précordiales normales. Dextrocardie : précordiales aussi anormales.",
+    "opts": [
+      "Dextrocardie",
+      "Inversion électrodes membres",
+      "BBG avec axe gauche extrême",
+      "Hémibloc antérieur"
+    ],
+    "ok": 1,
+    "id": 136
+  },
+  {
+    "cat": "autre",
+    "title": "Péricardite constrictive",
+    "short": "Péricardite constr.",
+    "diff": "difficile",
+    "shape": "fa",
+    "lead": "DII",
+    "answer": "Péricardite Constrictive — Manifestations ECG",
+    "desc": "Bas voltages diffus, FA fréquente, T négatives diffuses. ECG non spécifique mais contexte : dyspnée chronique, signes de congestion droite. TDM/IRM confirme.",
+    "keys": [
+      "Bas voltages diffus",
+      "FA chronique fréquente",
+      "T négatives diffuses",
+      "Contexte : congestion droite chronique, calcifications péricardiques"
+    ],
+    "hint": "Bas voltages + FA + signes de congestion droite = péricardite constrictive à évoquer.",
+    "opts": [
+      "Tamponnade",
+      "Amyloïdose",
+      "Péricardite constrictive",
+      "Hypothyroïdie"
+    ],
+    "ok": 2,
+    "id": 137
+  },
+  {
+    "cat": "autre",
+    "title": "Embolie pulmonaire massive",
+    "short": "EP massive",
+    "diff": "difficile",
+    "shape": "ep",
+    "lead": "V1-V3",
+    "answer": "Embolie Pulmonaire Massive — Cœur Pulmonaire Aigu",
+    "desc": "Tachycardie sinusale + S1Q3T3 (onde S en DI, Q en DIII, T- en DIII) + BBD incomplet + T- V1-V3 + axe droit. Survient en heures.",
+    "keys": [
+      "Tachycardie sinusale",
+      "S1Q3T3 (classique mais inconstant)",
+      "BBD INCOMPLET aigu",
+      "T- V1-V3 + axe droit aigu"
+    ],
+    "hint": "Tachycardie + BBD aigu + T- V1-V3 = penser EP massive. S1Q3T3 est classique mais inconstant.",
+    "opts": [
+      "STEMI VD",
+      "EP massive (cœur pulmonaire aigu)",
+      "HVD chronique (HTAP)",
+      "Myocardite"
+    ],
+    "ok": 1,
+    "id": 138
+  },
+  {
+    "cat": "autre",
+    "title": "Stimulation biventriculaire CRT",
+    "short": "CRT (biventriculaire)",
+    "diff": "difficile",
+    "shape": "pacemaker",
+    "lead": "DII",
+    "answer": "Pacemaker Biventriculaire (CRT — Resynchronisation Cardiaque)",
+    "desc": "QRS larges stimulés avec aspect particulier. Spike double (VD + VG) ou un seul visible. QRS plus étroit que le BBG spontané = resynchronisation efficace.",
+    "keys": [
+      "Spikes de stimulation",
+      "QRS LARGES stimulés",
+      "QRS plus étroit que BBG de base si CRT efficace",
+      "Indication : BBG + FE effondrée + QRS > 130ms"
+    ],
+    "hint": "Patient avec BBG sévère + insuffisance cardiaque + spikes = CRT. Évaluer l'étroitissement du QRS.",
+    "opts": [
+      "Pacemaker VVI simple",
+      "BBG",
+      "CRT (resynchronisation biventriculaire)",
+      "BBD iatrogène"
+    ],
+    "ok": 2,
+    "id": 139
+  },
+  {
+    "cat": "autre",
+    "title": "Hypertension artérielle pulmonaire sévère",
+    "short": "HTAP sévère",
+    "diff": "difficile",
+    "shape": "hypertrophie_vd",
+    "lead": "V1",
+    "answer": "HTAP Sévère — HVD Sévère",
+    "desc": "R dominant en V1, S profond en V6, axe droit > +110°, T négatives V1-V4, P pulmonale. Stade avancé d'HTAP. Pronostic réservé.",
+    "keys": [
+      "R > S en V1 (HVD sévère)",
+      "Axe > +110°",
+      "T négatives V1-V4",
+      "P pulmonale en DII (HVD auriculaire)"
+    ],
+    "hint": "HVD très marquée + P pulmonale + axe droit extrême = HTAP sévère. Chercher la cause.",
+    "opts": [
+      "EP aiguë",
+      "BBD complet",
+      "HTAP sévère (HVD sévère)",
+      "Dextrocardie"
+    ],
+    "ok": 2,
+    "id": 140
+  },
+  {
+    "cat": "autre",
+    "title": "Syndrome de Lown-Ganong-Levine (LGL)",
+    "short": "LGL",
+    "diff": "difficile",
+    "shape": "wpw",
+    "lead": "DII",
+    "answer": "Syndrome de Lown-Ganong-Levine (LGL)",
+    "desc": "PR court < 120ms, QRS FIN (pas d'onde delta). Faisceau de James (court-circuit nodal). Prédispose aux TSV. Différent du WPW : pas d'onde delta.",
+    "keys": [
+      "PR COURT < 120ms",
+      "QRS FIN (PAS d'onde delta)",
+      "Faisceau de James",
+      "Prédispose aux TSV — différent du WPW"
+    ],
+    "hint": "PR court SANS onde delta SANS QRS large = LGL (pas WPW).",
+    "opts": [
+      "WPW",
+      "LGL (PR court sans delta)",
+      "BAV 1° à l'envers",
+      "AVNRT"
+    ],
+    "ok": 1,
+    "id": 141
+  },
+  {
+    "cat": "autre",
+    "title": "Tétralogie de Fallot corrigée",
+    "short": "Fallot corrigé",
+    "diff": "difficile",
+    "shape": "rbbb",
+    "lead": "V1",
+    "answer": "Tétralogie de Fallot Opérée — BBD Résiduel",
+    "desc": "BBD complet postopératoire systématique (patch de fermeture CIV). QRS ≥ 160ms = risque de TV/mort subite. Axe droit. Suivi cardiologique obligatoire.",
+    "keys": [
+      "BBD COMPLET postopératoire (obligatoire)",
+      "QRS ≥ 160ms = risque TV/mort subite",
+      "Axe droit persistant",
+      "Surveillance : IRM + Holter réguliers"
+    ],
+    "hint": "BBD chez un patient opéré de Fallot = attendu. QRS très large = surveiller.",
+    "opts": [
+      "BBD acquis",
+      "BBD + HBAG",
+      "Fallot opéré (BBD résiduel)",
+      "DAVD"
+    ],
+    "ok": 2,
+    "id": 142
+  },
+  {
+    "cat": "autre",
+    "title": "Trémulations musculaires (artefact)",
+    "short": "Artefact musculaire",
+    "diff": "moyen",
+    "shape": "vf",
+    "lead": "DII",
+    "answer": "Artefact ECG — Trémulations Musculaires",
+    "desc": "Oscillations rapides irrégulières UNIQUEMENT sur certaines dérivations. La ligne de base est perturbée mais les QRS restent identifiables. Parkinson, tremblements essentiels.",
+    "keys": [
+      "Oscillations irrégulières sur CERTAINES dérivations",
+      "QRS TOUJOURS identifiables",
+      "Ligne de base perturbée",
+      "Cause : Parkinson, tremblement essentiel, électrodes mal fixées"
+    ],
+    "hint": "Si les QRS sont identifiables malgré le 'bruit' = artefact. Si plus rien n'est visible = FV.",
+    "opts": [
+      "FV",
+      "Flutter ventriculaire",
+      "Artefact musculaire (tremblement)",
+      "TV polymorphe"
+    ],
+    "ok": 2,
+    "id": 143
+  },
+  {
+    "cat": "autre",
+    "title": "Ostium Secundum (CIA)",
+    "short": "CIA ostium 2",
+    "diff": "difficile",
+    "shape": "rbbb",
+    "lead": "V1",
+    "answer": "Communication Inter-Auriculaire type Ostium Secundum",
+    "desc": "BBD incomplet ou complet (surcharge VD), axe droit ou normal, P biauriculaire possible. QRS rsR' en V1 caractéristique. Shunt G→D chronique.",
+    "keys": [
+      "BBD incomplet/complet (rsR' en V1)",
+      "Axe droit ou normal",
+      "P biauriculaire possible",
+      "Shunt G→D : surcharge VD → HVD progressive"
+    ],
+    "hint": "BBD chez un jeune sans autre cause = penser CIA. Écho transthoracique.",
+    "opts": [
+      "BBD idiopathique",
+      "BBD + HVD",
+      "CIA type ostium secundum",
+      "DAVD"
+    ],
+    "ok": 2,
+    "id": 144
+  },
+  {
+    "cat": "rythme",
+    "title": "Tachycardie jonctionnelle non paroxystique",
+    "short": "Jonct. non-parox",
+    "diff": "difficile",
+    "shape": "jonctionnel",
+    "lead": "DII",
+    "answer": "Tachycardie Jonctionnelle Non Paroxystique",
+    "desc": "Rythme jonctionnel FC 70-120/min, début/fin progressifs. Causes : intoxication digitalique, post-op, hypokaliémie. QRS fins, P rétrograde.",
+    "keys": [
+      "Jonctionnel FC 70-120/min",
+      "Début/fin PROGRESSIFS (non brutal)",
+      "P rétrograde",
+      "Causes : digitaliques, post-op"
+    ],
+    "hint": "Jonctionnel modérément rapide à début/fin progressifs = non paroxystique.",
+    "opts": [
+      "TSV paroxystique",
+      "Jonctionnel non paroxystique",
+      "AVNRT",
+      "Rythme jonctionnel lent"
+    ],
+    "ok": 1,
+    "id": 145
+  },
+  {
+    "cat": "rythme",
+    "title": "Bloc sino-auriculaire 2° type II",
+    "short": "Bloc SA type II",
+    "diff": "difficile",
+    "shape": "bloc_sa",
+    "lead": "DII",
+    "answer": "Bloc Sino-Auriculaire 2° Type II",
+    "desc": "Disparition soudaine d'un cycle P-QRS entier. Pause = multiple exact du PP de base. Distinguer de la pause sinusale (pause non multiple du PP).",
+    "keys": [
+      "Pause = MULTIPLE EXACT du PP de base",
+      "Disparition d'un cycle P-QRST complet",
+      "Différent de la pause sinusale (irrégulier)",
+      "Nœud SA pathologique"
+    ],
+    "hint": "Si la pause est exactement le double du PP = bloc SA. Si irrégulière = pause sinusale.",
+    "opts": [
+      "Pause sinusale",
+      "Bloc SA 2° type I",
+      "Bloc SA 2° type II",
+      "BAV 2° Wenckebach"
+    ],
+    "ok": 2,
+    "id": 146
+  },
+  {
+    "cat": "rythme",
+    "title": "Maladie du sinus avancée",
+    "short": "Maladie du sinus",
+    "diff": "difficile",
+    "shape": "asystolie",
+    "lead": "DII",
+    "answer": "Syndrome Bradycardie-Tachycardie (Maladie du Sinus)",
+    "desc": "Alternance de bradycardie sinusale/pauses et de tachyarythmies (FA, flutter, TSV). Holter indispensable. Risque embolique pendant les pauses post-tachycardie.",
+    "keys": [
+      "Bradycardie sinusale + pauses",
+      "ALTERNANCE avec FA/TSV",
+      "Risque d'AVC pendant pause post-tachycardie",
+      "Traitement : pacemaker + anticoagulation"
+    ],
+    "hint": "Bradycardie puis FA puis retour bradycardie = syndrome brady-tachy = maladie du sinus.",
+    "opts": [
+      "FA paroxystique isolée",
+      "Bradycardie sinusale simple",
+      "Syndrome brady-tachy (maladie du sinus)",
+      "BAV 3°"
+    ],
+    "ok": 2,
+    "id": 147
+  },
+  {
+    "cat": "rythme",
+    "title": "Arythmie sinusale respiratoire",
+    "short": "Arythmie sinusale",
+    "diff": "facile",
+    "shape": "sinus",
+    "lead": "DII",
+    "answer": "Arythmie Sinusale Respiratoire (variante normale)",
+    "desc": "Variation cyclique du RR avec la respiration. FC augmente à l'inspiration, diminue à l'expiration. Ondes P sinusales normales. Normal chez le jeune.",
+    "keys": [
+      "RR variable cycliquement avec la respiration",
+      "P sinusales normales",
+      "FC accélère à l'inspiration",
+      "Normal chez l'enfant/adulte jeune"
+    ],
+    "hint": "RR irrégulier mais les P sont sinusales et normales, variation rythmée par la respiration.",
+    "opts": [
+      "FA",
+      "ESA",
+      "Arythmie sinusale respiratoire (normal)",
+      "Bloc SA"
+    ],
+    "ok": 2,
+    "id": 148
+  },
+  {
+    "cat": "rythme",
+    "title": "Tachycardie ventriculaire fasciculaire (Belhassen)",
+    "short": "TV fasciculaire",
+    "diff": "difficile",
+    "shape": "vt",
+    "lead": "V1",
+    "answer": "Tachycardie Ventriculaire Fasciculaire (Belhassen)",
+    "desc": "TV à QRS relativement fins (120-140ms), axe gauche ou droit. Sensible au vérapamil (rare parmi les TV). Cœur normal. Faisceau postérieur gauche.",
+    "keys": [
+      "QRS larges mais relativement FINS (120-140ms)",
+      "Axe axe droit ou gauche selon le faisceau",
+      "Cœur NORMAL (idiopathique)",
+      "Sensible au VÉRAPAMIL (unique parmi les TV)"
+    ],
+    "hint": "TV avec QRS pas très larges, cœur normal, sensible au vérapamil = TV fasciculaire de Belhassen.",
+    "opts": [
+      "TV sur cardiopathie ischémique",
+      "TSV avec aberration",
+      "TV fasciculaire (Belhassen)",
+      "WPW en TV"
+    ],
+    "ok": 2,
+    "id": 149
+  },
+  {
+    "cat": "rythme",
+    "title": "ESV polymorphes",
+    "short": "ESV polymorphes",
+    "diff": "moyen",
+    "shape": "extrasystoles_v",
+    "lead": "DII",
+    "answer": "ESV Polymorphes (multifocales)",
+    "desc": "ESV de morphologies différentes = foyers ventriculaires multiples. Plus préoccupant que les ESV monomorphes. Chercher cardiopathie sous-jacente.",
+    "keys": [
+      "ESV de MORPHOLOGIES DIFFÉRENTES",
+      "Plusieurs foyers ventriculaires",
+      "Plus préoccupant que les ESV monomorphes",
+      "Écho cœur + Holter systématique"
+    ],
+    "hint": "ESV de formes différentes = polymorphes = multifocales. Chercher une cardiopathie.",
+    "opts": [
+      "ESV monomorphes (bénin)",
+      "Bigéminisme",
+      "ESV polymorphes (multifocales)",
+      "TV"
+    ],
+    "ok": 2,
+    "id": 150
+  },
+  {
+    "cat": "rythme",
+    "title": "TV en salves (NSVT)",
+    "short": "NSVT",
+    "diff": "difficile",
+    "shape": "vt",
+    "lead": "DII",
+    "answer": "TV Non Soutenue (NSVT — Non-Sustained Ventricular Tachycardia)",
+    "desc": "Salves de ≥ 3 QRS ventriculaires larges, FC > 100/min, durée < 30 secondes. Peut être asymptomatique. Signification dépend du contexte cardiaque.",
+    "keys": [
+      "≥ 3 QRS larges consécutifs",
+      "FC > 100/min",
+      "Durée < 30 secondes (auto-terminée)",
+      "Bénigne si cœur sain, grave si cardiopathie"
+    ],
+    "hint": "3 QRS larges ou plus qui s'arrêtent seuls en moins de 30 secondes = NSVT.",
+    "opts": [
+      "TV soutenue",
+      "ESV couplées",
+      "NSVT (TV non soutenue)",
+      "Flutter ventriculaire"
+    ],
+    "ok": 2,
+    "id": 151
+  },
+  {
+    "cat": "rythme",
+    "title": "Rythme idioventriculaire (échappement)",
+    "short": "Idioventriculaire",
+    "diff": "difficile",
+    "shape": "vt",
+    "lead": "DII",
+    "answer": "Rythme Idioventriculaire (Échappement Ventriculaire)",
+    "desc": "QRS larges lents (FC 30-40/min). Pacemaker ventriculaire de secours. Témoigne d'une défaillance des centres supérieurs (sinus, jonction). → Stimulateur urgent.",
+    "keys": [
+      "QRS LARGES lents FC 30-40/min",
+      "Pacemaker de SECOURS ventriculaire",
+      "Défaillance des centres supérieurs",
+      "→ Stimulateur cardiaque EN URGENCE"
+    ],
+    "hint": "QRS larges LENTS (pas une tachycardie) = échappement ventriculaire. Pas une TV.",
+    "opts": [
+      "TV lente (RIVA)",
+      "Rythme idioventriculaire d'échappement",
+      "BAV 3° avec jonctionnel",
+      "TV"
+    ],
+    "ok": 1,
+    "id": 152
+  },
+  {
+    "cat": "ischémie",
+    "title": "NSTEMI avec sous-décalage diffus",
+    "short": "NSTEMI sous-ST",
+    "diff": "moyen",
+    "shape": "nstemi",
+    "lead": "V4-V6",
+    "answer": "NSTEMI — Sous-Décalage ST Diffus",
+    "desc": "Sous-décalage ST ≥ 0.5mm en ≥ 2 dérivations contiguës + troponine élevée. Sans sus-ST. Ischémie sous-endocardique. Coronarographie dans les 24-72h.",
+    "keys": [
+      "Sous-décalage ST ≥ 0.5mm",
+      "Pas de sus-ST (différence avec STEMI)",
+      "Troponine élevée",
+      "Coronarographie dans les 24-72h"
+    ],
+    "hint": "Sous-ST diffus + troponine élevée sans sus-ST = NSTEMI. Coronarographie différée.",
+    "opts": [
+      "Repolarisation précoce",
+      "STEMI postérieur",
+      "NSTEMI (sous-ST + troponine)",
+      "Péricardite"
+    ],
+    "ok": 2,
+    "id": 153
+  },
+  {
+    "cat": "ischémie",
+    "title": "Ischémie sous-endocardique diffuse",
+    "short": "Ischémie sous-endo",
+    "diff": "difficile",
+    "shape": "nstemi",
+    "lead": "V4-V6",
+    "answer": "Ischémie Sous-Endocardique Diffuse",
+    "desc": "Sous-décalage ST horizontal ou descendant diffus (V4-V6, DI, DII). Peut survenir pendant un effort (test d'effort positif) ou au repos (SCA).",
+    "keys": [
+      "Sous-décalage ST HORIZONTAL ou DESCENDANT",
+      "Diffus (V4-V6 + DI + DII)",
+      "Test d'effort positif si à l'effort",
+      "SCA si au repos"
+    ],
+    "hint": "Sous-ST horizontal diffus = ischémie sous-endocardique. Effort ou repos = SCA.",
+    "opts": [
+      "Péricardite",
+      "STEMI inférieur en miroir",
+      "Ischémie sous-endocardique diffuse",
+      "Hypokaliémie"
+    ],
+    "ok": 2,
+    "id": 154
+  },
+  {
+    "cat": "ischémie",
+    "title": "STEMI inférieur + STEMI VD",
+    "short": "STEMI inf+VD",
+    "diff": "difficile",
+    "shape": "stemi_inf",
+    "lead": "V3R-V4R",
+    "answer": "STEMI Inférieur avec Extension au Ventricule Droit",
+    "desc": "Sus-ST DII/DIII/aVF + sus-ST V3R/V4R ≥ 1mm. CD très proximale. Hypotension sensible aux liquides (pas de diurétiques !). Éviter les dérivés nitrés.",
+    "keys": [
+      "Sus-ST DII/DIII/aVF + sus-ST V3R/V4R",
+      "CD TRÈS PROXIMALE",
+      "Hypotension → remplissage vasculaire",
+      "CONTRE-INDICATION : dérivés nitrés, diurétiques"
+    ],
+    "hint": "STEMI inférieur + V4R sus-décalé = VD atteint. Remplir, pas de nitrates !",
+    "opts": [
+      "STEMI inférieur simple",
+      "EP massive",
+      "STEMI inférieur + VD",
+      "STEMI postérieur"
+    ],
+    "ok": 2,
+    "id": 155
+  },
+  {
+    "cat": "ischémie",
+    "title": "Péricardite aiguë — Stade 2",
+    "short": "Péricardite st.2",
+    "diff": "difficile",
+    "shape": "t_neg",
+    "lead": "DII",
+    "answer": "Péricardite Aiguë — Stade 2 (Normalisation transitoire)",
+    "desc": "Retour à la ligne isoélectrique transitoire avant l'inversion des T. Stade intermédiaire. Patient peut croire être guéri mais les T vont s'inverser.",
+    "keys": [
+      "Sus-ST disparu (normalisation transitoire)",
+      "T plates/biphasiques",
+      "Précède l'inversion des T (stade 3)",
+      "4 stades classiques de la péricardite"
+    ],
+    "hint": "ECG normalisé transitoirement entre le sus-ST initial et les T négatives = stade 2 péricardite.",
+    "opts": [
+      "Guérison complète",
+      "Péricardite stade 2 (normalisation transitoire)",
+      "NSTEMI en résolution",
+      "Myocardite"
+    ],
+    "ok": 1,
+    "id": 156
+  },
+  {
+    "cat": "ischémie",
+    "title": "Infarctus du myocarde silencieux",
+    "short": "IDM silencieux",
+    "diff": "difficile",
+    "shape": "onde_q",
+    "lead": "V1-V4",
+    "answer": "Infarctus du Myocarde Silencieux (Ancien Non Diagnostiqué)",
+    "desc": "Découverte fortuite d'ondes Q de nécrose sans antécédent documenté d'IDM. Fréquent chez le diabétique (neuropathie autonome). Bilan cardiovasculaire complet.",
+    "keys": [
+      "Ondes Q de nécrose SANS ANTÉCÉDENT documenté",
+      "Fréquent chez le diabétique (neuropathie autonome)",
+      "Découverte fortuite",
+      "Bilan : écho + coronarographie"
+    ],
+    "hint": "Q de nécrose chez un diabétique sans antécédent d'IDM = IDM silencieux par neuropathie.",
+    "opts": [
+      "Séquelle d'IDM connu",
+      "IDM silencieux (non diagnostiqué)",
+      "Onde Q normale (septal)",
+      "CMH"
+    ],
+    "ok": 1,
+    "id": 157
+  },
+  {
+    "cat": "métabolique",
+    "title": "Rhabdomyolyse (HyperK + HypoCA)",
+    "short": "Rhabdomyolyse",
+    "diff": "difficile",
+    "shape": "hyperk",
+    "lead": "DII",
+    "answer": "Rhabdomyolyse — HyperK + HypoCalcémie",
+    "desc": "T pointues (HyperK) + QT long (HypoCA) + CPK très élevées. Contexte : traumatisme, effort extrême, statines, alcoolisme. Risque TV/FV.",
+    "keys": [
+      "T pointues (HyperK)",
+      "QT long (HypoCA associée)",
+      "CPK très élevées",
+      "Contexte : traumatisme, effort, statines"
+    ],
+    "hint": "Après un traumatisme ou effort extrême : T pointues + QT long = HyperK + HypoCA de rhabdomyolyse.",
+    "opts": [
+      "Hyperkaliémie isolée",
+      "HyperK + HypoCA de rhabdomyolyse",
+      "IDM inférieur",
+      "Torsades de pointes idiopathiques"
+    ],
+    "ok": 1,
+    "id": 158
+  },
+  {
+    "cat": "métabolique",
+    "title": "Intoxication au lithium",
+    "short": "Lithium",
+    "diff": "difficile",
+    "shape": "t_neg",
+    "lead": "DII",
+    "answer": "Intoxication au Lithium — Manifestations ECG",
+    "desc": "T aplaties/inversées, QT long, troubles de repolarisation. À fortes doses : bloc SA, BAV, TV. Lithium en compétition avec le sodium.",
+    "keys": [
+      "T aplaties ou inversées",
+      "QT long",
+      "Troubles de conduction à dose toxique (BAV, TV)",
+      "Contexte : patient sous lithium + signes neuropsychiatriques"
+    ],
+    "hint": "Patient sous lithium + T aplaties + QT long = intoxication au lithium.",
+    "opts": [
+      "Hypokaliémie",
+      "Intoxication au lithium",
+      "Myocardite",
+      "Hypothyroïdie"
+    ],
+    "ok": 1,
+    "id": 159
+  },
+  {
+    "cat": "métabolique",
+    "title": "Hémochromatose cardiaque",
+    "short": "Hémochromatose",
+    "diff": "difficile",
+    "shape": "bav2m2",
+    "lead": "DII",
+    "answer": "Hémochromatose Cardiaque",
+    "desc": "Bas voltages, BAV de tout degré, arythmies (FA, TV), T négatives. Dépôts de fer dans le myocarde et le tissu de conduction. Écho : CMD. Ferritine très élevée.",
+    "keys": [
+      "Bas voltages + BAV",
+      "FA et arythmies ventriculaires",
+      "CMD (cardiomyopathie dilatée)",
+      "Ferritine très élevée — traitement : saignées"
+    ],
+    "hint": "Cardiomyopathie + BAV + arythmies chez patient avec surcharge en fer = hémochromatose.",
+    "opts": [
+      "Amyloïdose",
+      "Sarcoïdose",
+      "Hémochromatose cardiaque",
+      "Myocardite virale"
+    ],
+    "ok": 2,
+    "id": 160
+  },
+  {
+    "cat": "métabolique",
+    "title": "Syndrome de reperfusion",
+    "short": "Reperfusion",
+    "diff": "difficile",
+    "shape": "vt",
+    "lead": "DII",
+    "answer": "Arythmies de Reperfusion Post-Thrombolyse",
+    "desc": "RIVA, ESV fréquentes, TV non soutenues survenant dans les minutes suivant la reperfusion coronaire. Signe de succès de la thrombolyse ! Souvent auto-limité.",
+    "keys": [
+      "Survient dans les 30-90 min post-thrombolyse",
+      "RIVA (signe de reperfusion)",
+      "ESV fréquentes, TV non soutenues",
+      "Signe de SUCCÈS de la thrombolyse — surveiller"
+    ],
+    "hint": "Arythmies apparaissant peu après thrombolyse = bon signe (reperfusion réussie). Surveiller.",
+    "opts": [
+      "Arythmies ischémiques (signe de gravité)",
+      "Arythmies de reperfusion (bon signe)",
+      "TV sur récidive ischémique",
+      "FV primaire"
+    ],
+    "ok": 1,
+    "id": 161
+  },
+  {
+    "cat": "autre",
+    "title": "Endocardite infectieuse avec trouble conductif",
+    "short": "Endocardite + bloc",
+    "diff": "difficile",
+    "shape": "bav1",
+    "lead": "DII",
+    "answer": "Endocardite Infectieuse avec Trouble de Conduction",
+    "desc": "Apparition d'un BAV ou allongement progressif du PR chez un patient avec endocardite = URGENCE : extension péri-annulaire vers le tissu de conduction. Chirurgie urgente.",
+    "keys": [
+      "PR s'allongeant OU BAV nouveau chez endocarditique",
+      "Extension péri-annulaire (abcès)",
+      "URGENCE CHIRURGICALE",
+      "Pronostic sévère"
+    ],
+    "hint": "BAV nouveau ou PR qui s'allonge pendant une endocardite = abcès péri-annulaire. Chirurgie urgente !",
+    "opts": [
+      "BAV vagal bénin",
+      "BAV sur médicament",
+      "Endocardite + abcès péri-annulaire",
+      "BAV idiopathique"
+    ],
+    "ok": 2,
+    "id": 162
+  },
+  {
+    "cat": "autre",
+    "title": "Carcinome bronchique (tamponnade)",
+    "short": "Tamponnade",
+    "diff": "difficile",
+    "shape": "brady_sinus",
+    "lead": "DII",
+    "answer": "Tamponnade Péricardique — Alternance Électrique",
+    "desc": "Alternance de l'amplitude du QRS (alternance électrique) + tachycardie sinusale + bas voltages. Épanchement péricardique abondant. Urgence : péricardiocentèse.",
+    "keys": [
+      "ALTERNANCE ÉLECTRIQUE (QRS alternant grand/petit)",
+      "Tachycardie sinusale",
+      "Bas voltages",
+      "Urgence : péricardiocentèse"
+    ],
+    "hint": "Alternance de l'amplitude des QRS + tachycardie = tamponnade. Péricardiocentèse !",
+    "opts": [
+      "Péricardite simple",
+      "Alternance de blocs de branche",
+      "Tamponnade (alternance électrique)",
+      "Cardiomyopathie dilatée"
+    ],
+    "ok": 2,
+    "id": 163
+  },
+  {
+    "cat": "autre",
+    "title": "Trouble conductif post-chirurgie cardiaque",
+    "short": "Post-chirurgie",
+    "diff": "difficile",
+    "shape": "rbbb",
+    "lead": "V1",
+    "answer": "Trouble de Conduction Post-Chirurgie Cardiaque",
+    "desc": "BBD (voire BBG) apparaissant après chirurgie à cœur ouvert. Souvent transitoire. BBD quasi systématique après correction de CIA ou Fallot. Peut être permanent.",
+    "keys": [
+      "BBD/BBG apparu APRÈS chirurgie cardiaque",
+      "Souvent transitoire (oedème péri-chirurgical)",
+      "Systématique après CIA/Fallot",
+      "Surveillance Holter si symptomatique"
+    ],
+    "hint": "Bloc de branche nouveau après chirurgie cardiaque = complication attendue et souvent transitoire.",
+    "opts": [
+      "BBD idiopathique",
+      "BBD post-chirurgie cardiaque",
+      "Sarcoïdose",
+      "Endocardite"
+    ],
+    "ok": 1,
+    "id": 164
+  },
+  {
+    "cat": "autre",
+    "title": "HVG avec surcharge systolique",
+    "short": "HVG surcharge syst",
+    "diff": "moyen",
+    "shape": "hypertrophie_vg",
+    "lead": "V5-V6",
+    "answer": "HVG avec Surcharge Systolique (Strain Pattern)",
+    "desc": "Critères HVG (Sokolow > 35mm ou Cornell > 28mm) + T négatives asymétriques V5-V6/DI/aVL (strain). Cause : HTA sévère, sténose aortique. Risque de CMD.",
+    "keys": [
+      "Sokolow > 35mm OU Cornell > 28mm (HVG)",
+      "T négatives ASYMÉTRIQUES V5-V6/DI/aVL (strain)",
+      "Causes : HTA sévère, rétrécissement aortique",
+      "Risque d'évolution vers CMD"
+    ],
+    "hint": "HVG électrique + T négatives asymétriques en latérales = pattern de strain (surcharge systolique).",
+    "opts": [
+      "HVG sans surcharge",
+      "HVG avec strain (surcharge systolique)",
+      "BBG",
+      "NSTEMI latéral"
+    ],
+    "ok": 1,
+    "id": 165
+  },
+  {
+    "cat": "autre",
+    "title": "Onde P pulmonale",
+    "short": "P pulmonale (BPCO)",
+    "diff": "moyen",
+    "shape": "onde_p_pulmonale",
+    "lead": "DII",
+    "answer": "Onde P Pulmonale (HAD sur BPCO)",
+    "desc": "P ≥ 2.5mm et pointue en DII (hypertrophie auriculaire droite). Contexte : BPCO, HTAP, cœur pulmonaire chronique. Associée à des signes d'HVD souvent.",
+    "keys": [
+      "P ≥ 2.5mm POINTUE en DII",
+      "Hypertrophie auriculaire DROITE",
+      "Axe de P > +90°",
+      "Causes : BPCO, HTAP, CPC"
+    ],
+    "hint": "Onde P haute et pointue en DII = P pulmonale = hypertrophie auriculaire droite. Chercher BPCO.",
+    "opts": [
+      "P mitrale (HAG)",
+      "P pulmonale (HAD)",
+      "P sinusale normale",
+      "Flutter auriculaire"
+    ],
+    "ok": 1,
+    "id": 166
+  }
+];
+
+
+var CAT  = {"rythme":"#00c8f8","ischémie":"#ff7830","métabolique":"#b060ff","autre":"#40f0ff"};
+var DIFF = {"facile":"#00f090","moyen":"#ffc840","difficile":"#ff3356"};
+
+
+
+// ─── SPACED REPETITION ────────────────────────────────────────────────────────
+var SR_KEY = "ecg_sr_v1";
+var SR_INTERVALS = [0, 1, 3, 7, 14, 21];
+
+function srLoad() {
+  try { return JSON.parse(localStorage.getItem(SR_KEY) || "{}"); } catch(e) { return {}; }
+}
+function srSave(data) {
+  try { localStorage.setItem(SR_KEY, JSON.stringify(data)); } catch(e) {}
+}
+function srUpdate(data, id, correct) {
+  var now = Date.now();
+  var e = data[id] || {level:0, attempts:0, correct:0};
+  var next = {level:e.level, attempts:e.attempts+1, correct:e.correct+(correct?1:0)};
+  next.level = correct ? Math.min(5, e.level+1) : Math.max(0, e.level-2);
+  next.nextReview = now + SR_INTERVALS[next.level] * 86400000;
+  var out = {};
+  for(var k in data) out[k] = data[k];
+  out[id] = next;
+  return out;
+}
+function srQueue(cases, data) {
+  var now = Date.now();
+  var due=[], fresh=[], future=[];
+  cases.forEach(function(c){
+    if (!data[c.id]) fresh.push(c);
+    else if (data[c.id].nextReview <= now) due.push(c);
+    else future.push(c);
+  });
+  due.sort(function(a,b){ return ((data[a.id]&&data[a.id].level)||0)-((data[b.id]&&data[b.id].level)||0); });
+  fresh.sort(function(){ return Math.random()-0.5; });
+  future.sort(function(a,b){ return ((data[a.id]&&data[a.id].level)||0)-((data[b.id]&&data[b.id].level)||0); });
+  return due.concat(fresh).concat(future);
+}
+function srStats(data, cases) {
+  var mastered=0, learning=0, fresh=0, due=0;
+  var byCat = {};
+  var now = Date.now();
+  cases.forEach(function(c) {
+    if (!byCat[c.cat]) byCat[c.cat] = {attempts:0,correct:0,count:0,mastered:0,due:0};
+    byCat[c.cat].count++;
+    var e = data[c.id];
+    if (!e) { fresh++; return; }
+    if (e.level>=4) { mastered++; byCat[c.cat].mastered++; }
+    else learning++;
+    if (e.nextReview<=now) { due++; byCat[c.cat].due++; }
+    byCat[c.cat].attempts += e.attempts;
+    byCat[c.cat].correct  += e.correct;
+  });
+  return {mastered:mastered, learning:learning, fresh:fresh, due:due, total:cases.length, byCat:byCat};
+}
+
+
+// ─── APP STATE ────────────────────────────────────────────────────────────────
+var ALL_CASES = CORE_CASES.concat(EXTRA_CASES);
+var CATS = ["tous","rythme","ischemie","metabolique","autre"];
+var CATS_DISPLAY = {"tous":"Tous","rythme":"Rythme","ischemie":"Ischémie","metabolique":"Métabolique","autre":"Autre"};
+var CATS_KEY = {"rythme":"ischémie","ischemie":"ischémie","metabolique":"métabolique","autre":"autre"};
+
+// Remap category keys for display vs data
+// Data uses accented keys, we use safe keys for attrs
+function catKey(f) {
+  if(f==="ischemie") return "ischémie";
+  if(f==="metabolique") return "métabolique";
+  return f;
+}
+function catAttr(k) {
+  if(k==="ischémie") return "ischemie";
+  if(k==="métabolique") return "metabolique";
+  return k;
+}
+
+var state = {
+  screen: "home",
+  tab: "revision",
+  filter: "tous",
+  srMode: true,
+  srData: srLoad(),
+  current: null,
+  queue: [],
+  selected: null,
+  showResult: false,
+  showHint: false,
+  showKeys: false,
+  score: {ok:0, total:0},
+  history: []
+};
+
+function getFiltered() {
+  var fk = catKey(state.filter);
+  return state.filter === "tous" ? ALL_CASES : ALL_CASES.filter(function(c){ return c.cat === fk; });
+}
+
+function render() {
+  var app = document.getElementById('app');
+  if (state.screen === "home") app.innerHTML = renderHome();
+  else if (state.screen === "quiz") app.innerHTML = renderQuiz();
+  else app.innerHTML = renderResult();
+  bindEvents();
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function h(str) {
+  return (str||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function catColor(cat) {
+  var m = {"rythme":"#00c8f8","ischémie":"#ff7830","métabolique":"#b060ff","autre":"#40f0ff"};
+  return m[cat] || "#00c8f8";
+}
+function catIcon(cat) {
+  var m = {"rythme":"⚡","ischémie":"🫀","métabolique":"🧪","autre":"📐"};
+  return m[cat] || "";
+}
+function diffColor(d) {
+  return d==="facile"?"#00f090":d==="moyen"?"#ffc840":"#ff3356";
+}
+
+// ─── HOME ─────────────────────────────────────────────────────────────────────
+function renderHome() {
+  var filtered = getFiltered();
+  var st = srStats(state.srData, ALL_CASES);
+  var counts = {};
+  ALL_CASES.forEach(function(c){ counts[c.cat] = (counts[c.cat]||0)+1; });
+  var dueInFilter = filtered.filter(function(c){
+    return !state.srData[c.id] || state.srData[c.id].nextReview <= Date.now();
+  }).length;
+
+  var parts = [];
+  parts.push('<div class="page home-page">');
+  parts.push('<div class="header">');
+  parts.push('<div class="header-sub">◈ FORMATION ECG ◈</div>');
+  parts.push('<h1>ECG Trainer</h1>');
+  parts.push('<div class="header-cats">⚡ Rythmes · 🫀 Ischémie · 🧪 Métabolique · 📐 Autre</div>');
+  parts.push('</div>');
+
+  parts.push('<div class="ecg-banner">');
+  parts.push('<svg viewBox="0 0 800 120" preserveAspectRatio="none" style="width:100%;display:block;border-radius:10px;filter:drop-shadow(0 0 10px #00f09055)">');
+  parts.push('<defs><pattern id="hpb" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#0a1e2e" stroke-width="0.5"/></pattern></defs>');
+  parts.push('<rect width="800" height="120" fill="#091522" rx="8"/>');
+  parts.push('<rect width="800" height="120" fill="url(#hpb)" rx="8"/>');
+  parts.push('<path d="' + ECG_SHAPES.stemi_ant() + '" fill="none" stroke="#00f090" stroke-width="1.7" stroke-linecap="round"/>');
+  parts.push('</svg></div>');
+
+  parts.push('<div class="tabs">');
+  parts.push('<button class="tab-btn ' + (state.tab==='revision'?'active':'') + '" data-tab="revision">🃏 Révision</button>');
+  parts.push('<button class="tab-btn ' + (state.tab==='stats'?'active':'') + '" data-tab="stats">📊 Statistiques</button>');
+  parts.push('</div>');
+
+  if (state.tab === 'revision') {
+    parts.push(renderRevisionTab(st, counts, dueInFilter, filtered));
+  } else {
+    parts.push(renderStatsTab(st, counts));
+  }
+  parts.push('</div>');
+  return parts.join('');
+}
+
+function renderRevisionTab(st, counts, dueInFilter, filtered) {
+  var p = [];
+
+  // SR summary cards
+  p.push('<div class="sr-summary">');
+  var cards = [
+    {n:dueInFilter, label:"À revoir", col:dueInFilter>0?"#ff3356":"#4a6888", icon:"🔴"},
+    {n:st.fresh, label:"Nouveaux", col:"#ffc840", icon:"🆕"},
+    {n:st.mastered, label:"Maîtrisés", col:"#00f090", icon:"✅"},
+    {n:ALL_CASES.length, label:"Total", col:"#00c8f8", icon:"📚"}
+  ];
+  cards.forEach(function(s) {
+    p.push('<div class="stat-card" style="border-color:' + s.col + '33">');
+    p.push('<div class="stat-n" style="color:' + s.col + '">' + s.n + '</div>');
+    p.push('<div class="stat-label">' + s.icon + ' ' + s.label + '</div>');
+    p.push('</div>');
+  });
+  p.push('</div>');
+
+  // Mode toggle
+  p.push('<div class="mode-row">');
+  p.push('<button class="mode-btn ' + (state.srMode?'active':'') + '" id="modeToggle">');
+  p.push(state.srMode ? "🧠 Révision espacée ON" : "🎲 Mode aléatoire");
+  p.push('</button>');
+  if (state.srMode && dueInFilter > 0) {
+    p.push('<span class="due-badge">● ' + dueInFilter + ' à revoir</span>');
+  }
+  p.push('</div>');
+
+  // Filters
+  p.push('<div class="filters">');
+  var filterList = ["tous","rythme","ischemie","metabolique","autre"];
+  filterList.forEach(function(f) {
+    var fk = catKey(f);
+    var col = f==="tous" ? "#00c8f8" : catColor(fk);
+    var n = f==="tous" ? ALL_CASES.length : (counts[fk]||0);
+    var d = f==="tous" ? dueInFilter : ALL_CASES.filter(function(c){
+      return c.cat===fk && (!state.srData[c.id]||state.srData[c.id].nextReview<=Date.now());
+    }).length;
+    var isActive = state.filter===f;
+    var style = isActive ? ('border-color:'+col+';background:'+col+'22;color:'+col) : '';
+    p.push('<button class="filter-btn ' + (isActive?'active':'') + '" data-filter="' + f + '" style="' + style + '">');
+    p.push(f==="tous" ? "Tous" : (catIcon(fk)+' '+f.charAt(0).toUpperCase()+f.slice(1)));
+    p.push(' <span style="opacity:0.7">(' + n + ')</span>');
+    if (d>0) p.push('<span style="color:#ff3356;font-size:9px">●' + d + '</span>');
+    p.push('</button>');
+  });
+  p.push('</div>');
+
+  // Start button
+  var btnLabel = state.srMode && dueInFilter>0 ? ("Réviser ("+dueInFilter+")") : state.srMode ? "Révision" : "Commencer";
+  p.push('<button class="start-btn" id="startBtn"' + (filtered.length===0?' disabled':'') + '>▶ ' + btnLabel + '</button>');
+
+  // Case grid
+  p.push('<div class="case-grid-wrap">');
+  p.push('<div class="section-label">CAS DISPONIBLES</div>');
+  p.push('<div class="case-grid">');
+  var listCases = state.filter==="tous" ? ALL_CASES : ALL_CASES.filter(function(c){ return c.cat===catKey(state.filter); });
+  listCases.forEach(function(c) {
+    var e = state.srData[c.id];
+    var due = e && e.nextReview <= Date.now();
+    var col = e ? (e.level>=4?"#00f090":e.level>=2?"#ffc840":"#ff3356") : "#4a6888";
+    var badge = e ? (due ? '<span style="color:'+col+'">◉ À revoir</span>' : '<span style="color:#4a6888">Niv.'+e.level+' ✓</span>') : '<span style="color:#4a6888">Nouveau</span>';
+    var dc = diffColor(c.diff);
+    var cc = catColor(c.cat);
+    p.push('<div class="case-card" style="border-color:'+cc+'22">');
+    p.push('<div class="case-title">' + h(c.short||c.title) + '</div>');
+    p.push('<div class="case-meta">');
+    p.push('<span class="diff-badge" style="background:'+dc+'22;color:'+dc+'">' + h(c.diff) + '</span>');
+    p.push(badge);
+    p.push('</div></div>');
+  });
+  p.push('</div></div>');
+  return p.join('');
+}
+
+function renderStatsTab(st, counts) {
+  var p = [];
+  p.push('<div class="stats-page">');
+  p.push('<div class="section-label">PROGRESSION GLOBALE</div>');
+  p.push('<div class="global-stats">');
+  var gst = [
+    {label:"Maîtrisés", val:st.mastered, col:"#00f090"},
+    {label:"En cours", val:st.learning, col:"#ffc840"},
+    {label:"Nouveaux", val:st.fresh, col:"#4a6888"}
+  ];
+  gst.forEach(function(s) {
+    var pct = st.total>0 ? Math.round((s.val/st.total)*100) : 0;
+    p.push('<div class="global-stat">');
+    p.push('<div class="global-pct" style="color:'+s.col+'">'+pct+'%</div>');
+    p.push('<div class="global-label">'+s.label+'</div>');
+    p.push('<div style="font-size:10px;color:'+s.col+'">'+s.val+'/'+st.total+'</div>');
+    p.push('</div>');
+  });
+  p.push('</div>');
+  var mPct = st.total>0?(st.mastered/st.total)*100:0;
+  var lPct = st.total>0?(st.learning/st.total)*100:0;
+  p.push('<div class="progress-bar" style="margin-bottom:24px"><div style="height:100%;display:flex">');
+  p.push('<div style="width:'+mPct+'%;background:#00f090;transition:width 0.6s"></div>');
+  p.push('<div style="width:'+lPct+'%;background:#ffc840;transition:width 0.6s"></div>');
+  p.push('</div></div>');
+
+  p.push('<div class="section-label">PAR CATÉGORIE</div>');
+  var catList = ["rythme","ischémie","métabolique","autre"];
+  catList.forEach(function(cat) {
+    var col = catColor(cat);
+    var d = st.byCat[cat] || {attempts:0,correct:0,count:0,mastered:0,due:0};
+    var sc = d.attempts>0 ? Math.round((d.correct/d.attempts)*100) : null;
+    var wPct = d.count>0?(d.mastered/d.count)*100:0;
+    var scol = sc===null?"#4a6888":sc>=80?"#00f090":sc>=60?"#ffc840":"#ff3356";
+    p.push('<div class="cat-stat-card" style="border-color:'+col+'22">');
+    p.push('<div class="cat-stat-header">');
+    p.push('<div class="cat-stat-left">');
+    p.push('<span style="font-size:18px">'+catIcon(cat)+'</span>');
+    p.push('<span style="font-weight:700;color:'+col+'">'+cat.charAt(0).toUpperCase()+cat.slice(1)+'</span>');
+    p.push('<span style="font-size:9px;color:#4a6888">'+d.count+' cas</span>');
+    p.push('</div>');
+    p.push(sc!==null ? '<span style="font-size:22px;font-weight:900;color:'+scol+'">'+sc+'%</span>' : '<span style="color:#4a6888">—</span>');
+    p.push('</div>');
+    p.push('<div class="progress-bar" style="margin:8px 0 6px"><div style="height:100%;width:'+wPct+'%;background:'+col+';border-radius:3px;transition:width 0.6s"></div></div>');
+    p.push('<div style="display:flex;justify-content:space-between;font-size:9px;color:#4a6888">');
+    p.push('<span>✅ '+d.mastered+'/'+d.count+' maîtrisés</span>');
+    if(d.due>0) p.push('<span style="color:#ff3356">● '+d.due+' à revoir</span>');
+    if(d.attempts>0) p.push('<span>'+d.correct+'/'+d.attempts+' réponses</span>');
+    p.push('</div></div>');
+  });
+
+  // Weak spots
+  var weak = ALL_CASES.filter(function(c){
+    return state.srData[c.id] && state.srData[c.id].attempts>=2 && state.srData[c.id].level<=1;
+  }).sort(function(a,b){
+    return ((state.srData[a.id]&&state.srData[a.id].level)||0)-((state.srData[b.id]&&state.srData[b.id].level)||0);
+  }).slice(0,5);
+
+  if (weak.length) {
+    p.push('<div class="section-label" style="color:#ff3356;margin-top:16px">⚠ POINTS FAIBLES</div>');
+    weak.forEach(function(c) {
+      var e = state.srData[c.id];
+      var pct = Math.round((e.correct/e.attempts)*100);
+      p.push('<div class="weak-card">');
+      p.push('<span style="font-size:14px">'+catIcon(c.cat)+'</span>');
+      p.push('<div style="flex:1;min-width:0"><div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(c.title)+'</div>');
+      p.push('<div style="font-size:9px;color:#4a6888">Niv.'+e.level+'/5 · '+e.correct+'/'+e.attempts+'</div></div>');
+      p.push('<div class="pct-circle">'+pct+'%</div>');
+      p.push('</div>');
+    });
+  }
+
+  if (st.total > st.fresh) {
+    p.push('<div id="resetConfirm" style="margin-top:16px">');
+    p.push('<button class="reset-btn" id="resetBtn">🔄 Réinitialiser la progression</button>');
+    p.push('</div>');
+  }
+  p.push('</div>');
+  return p.join('');
+}
+
+// ─── QUIZ ─────────────────────────────────────────────────────────────────────
+function renderQuiz() {
+  var c = state.current;
+  if (!c) return '';
+  var catCol = catColor(c.cat);
+  var ecgPath = (ECG_SHAPES[c.shape] || ECG_SHAPES.sinus)();
+  var prog = state.history.length / (state.history.length + state.queue.length + 1);
+  var e = state.srData[c.id];
+  var dc = diffColor(c.diff);
+  var correct = state.selected === c.ok;
+
+  var p = [];
+  p.push('<div class="page quiz-page">');
+  p.push('<div class="topbar">');
+  p.push('<button class="back-btn" id="backBtn">← Accueil</button>');
+  p.push('<span class="topbar-title">ECG TRAINER</span>');
+  p.push('<span style="font-size:11px;color:#4a6888">'+(state.history.length+1)+'/'+(state.history.length+state.queue.length+1)+'</span>');
+  p.push('</div>');
+  p.push('<div class="progress-track"><div class="progress-fill" style="width:'+(prog*100)+'%"></div></div>');
+  p.push('<div class="quiz-scroll">');
+
+  // Badges
+  p.push('<div class="badges-row">');
+  p.push('<span class="badge" style="background:'+dc+'22;color:'+dc+'">'+h((c.diff||'').toUpperCase())+'</span>');
+  p.push('<span class="badge" style="background:'+catCol+'22;color:'+catCol+'">'+catIcon(c.cat)+' '+h((c.cat||'').toUpperCase())+'</span>');
+  if(e) p.push('<span class="badge" style="background:#122030;color:#4a6888">Niv.'+e.level+'/5 · '+e.correct+'/'+e.attempts+'</span>');
+  p.push('<span style="font-size:10px;color:#4a6888;margin-left:auto">✓'+state.score.ok+' ✗'+(state.score.total-state.score.ok)+'</span>');
+  p.push('</div>');
+
+  // ECG strip
+  p.push('<div class="ecg-box">');
+  p.push('<span class="ecg-label">● 25mm/s · 10mm/mV</span>');
+  p.push('<div class="strip-row">');
+  p.push('<div class="lead-label">'+h(c.lead||'DII')+'</div>');
+  p.push('<svg viewBox="0 0 800 120" class="strip-svg" preserveAspectRatio="none">');
+  p.push('<defs><pattern id="g0" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#0a1e2e" stroke-width="0.4"/></pattern></defs>');
+  p.push('<rect width="800" height="120" fill="#091522"/>');
+  p.push('<rect width="800" height="120" fill="url(#g0)"/>');
+  p.push('<line x1="0" y1="60" x2="800" y2="60" stroke="#0a1e2e" stroke-width="0.8" stroke-dasharray="3,12"/>');
+  p.push('<path d="'+ecgPath+'" fill="none" stroke="#00f090" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>');
+  p.push('</svg></div></div>');
+
+  p.push('<div class="question">Quel est ce diagnostic ECG ?</div>');
+  p.push('<div class="opts">');
+  (c.opts||[]).forEach(function(opt, idx) {
+    var style, icon='';
+    if (!state.showResult) {
+      style = 'background:transparent;border:1px solid #122030;color:#d0e8ff';
+    } else if (idx===c.ok) {
+      style = 'background:#00f09018;border:1px solid #00f090;color:#00f090'; icon='✓';
+    } else if (idx===state.selected) {
+      style = 'background:#ff335618;border:1px solid #ff3356;color:#ff3356'; icon='✗';
+    } else {
+      style = 'background:transparent;border:1px solid #122030;color:#4a6888';
+    }
+    p.push('<button class="opt-btn" data-idx="'+idx+'" style="'+style+'">');
+    p.push('<span class="opt-letter">'+String.fromCharCode(65+idx)+'</span>');
+    p.push('<span style="flex:1">'+h(opt)+'</span>');
+    if(icon) p.push('<span>'+icon+'</span>');
+    p.push('</button>');
+  });
+  p.push('</div>');
+
+  p.push('<div class="action-row">');
+  if(!state.showResult) p.push('<button class="hint-btn" id="hintBtn">💡 '+(state.showHint?'Masquer':'Indice')+'</button>');
+  if(state.showResult) p.push('<button class="keys-btn" id="keysBtn">🔍 '+(state.showKeys?'Masquer':'Critères')+'</button>');
+  p.push('</div>');
+
+  if(state.showHint && !state.showResult) {
+    p.push('<div class="hint-box">💡 '+h(c.hint)+'</div>');
+  }
+
+  if(state.showResult) {
+    var rCol = correct?'#00f090':'#ff3356';
+    p.push('<div class="result-box" style="background:'+rCol+'18;border:1px solid '+rCol+'44">');
+    p.push('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">');
+    p.push('<div style="font-weight:700;color:'+rCol+'">'+(correct?'✓ Correct !':'✗ C\'était : '+h(c.answer))+'</div>');
+    if(e) {
+      var newLv = srUpdate({},c.id,correct);
+      // just show the direction
+      p.push('<div style="font-size:9px;color:#4a6888">'+(correct?'↑ Niveau':'↓ Niveau')+'</div>');
+    }
+    p.push('</div>');
+    p.push('<div style="font-size:11px;color:#4a6888;line-height:1.8">'+h(c.desc)+'</div>');
+    p.push('</div>');
+  }
+
+  if(state.showKeys && state.showResult) {
+    p.push('<div class="keys-box">');
+    p.push('<div class="section-label" style="margin-bottom:8px;text-align:left">CRITÈRES DIAGNOSTIQUES</div>');
+    (c.keys||[]).forEach(function(k){
+      p.push('<div class="key-item"><span style="color:#00c8f8;flex-shrink:0">▸</span>'+h(k)+'</div>');
+    });
+    p.push('</div>');
+  }
+
+  if(state.showResult) {
+    p.push('<button class="next-btn" id="nextBtn">'+(state.queue.length===0?'Voir les résultats →':'Cas suivant →')+'</button>');
+  }
+
+  p.push('</div></div>');
+  return p.join('');
+}
+
+// ─── RESULT ───────────────────────────────────────────────────────────────────
+function renderResult() {
+  var pct = Math.round((state.score.ok/state.score.total)*100);
+  var gc = pct>=80?"#00f090":pct>=60?"#ffc840":"#ff3356";
+  var gt = pct>=80?"Expert !":pct>=60?"Bien joué":"À retravailler";
+  var st = srStats(state.srData, ALL_CASES);
+  var p = [];
+
+  p.push('<div class="page result-page">');
+  p.push('<div style="font-size:9px;letter-spacing:6px;color:#00c8f8;margin-bottom:12px">◈ SESSION TERMINÉE ◈</div>');
+  p.push('<div style="font-size:68px;font-weight:900;color:'+gc+'">'+pct+'%</div>');
+  p.push('<div style="font-size:18px;color:'+gc+';margin-bottom:4px">'+gt+'</div>');
+  p.push('<div style="font-size:12px;color:#4a6888;margin-bottom:20px">'+state.score.ok+'/'+state.score.total+' bonnes réponses</div>');
+
+  p.push('<div style="display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;justify-content:center">');
+  var res = [
+    {n:state.score.ok, label:"Niveau ↑", col:"#00f090"},
+    {n:state.score.total-state.score.ok, label:"À retravailler", col:"#ff3356"},
+    {n:st.due, label:"Révisions dues", col:"#ffc840"}
+  ];
+  res.forEach(function(s){
+    p.push('<div class="mini-stat" style="border-color:'+s.col+'33">');
+    p.push('<div style="font-size:22px;font-weight:900;color:'+s.col+'">'+s.n+'</div>');
+    p.push('<div style="font-size:9px;color:#4a6888">'+s.label+'</div>');
+    p.push('</div>');
+  });
+  p.push('</div>');
+
+  p.push('<div class="history-list">');
+  state.history.forEach(function(item){
+    var hc = item.ok?"#00f09040":"#ff335640";
+    var tc = item.ok?"#00f090":"#ff3356";
+    p.push('<div class="history-item" style="border-color:'+hc+'">');
+    p.push('<span style="font-size:16px;color:'+tc+'">'+(item.ok?'✓':'✗')+'</span>');
+    p.push('<div style="flex:1;min-width:0">');
+    p.push('<div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(item.case.title)+'</div>');
+    if(!item.ok) p.push('<div style="font-size:9px;color:#4a6888">→ '+h(item.case.answer)+'</div>');
+    p.push('</div>');
+    p.push('<div style="font-size:10px;color:'+catColor(item.case.cat)+';flex-shrink:0">'+catIcon(item.case.cat)+'</div>');
+    p.push('</div>');
+  });
+  p.push('</div>');
+
+  p.push('<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">');
+  p.push('<button class="btn-outline-accent" id="statsBtn">📊 Stats</button>');
+  p.push('<button class="btn-outline-dim" id="homeBtn">← Accueil</button>');
+  p.push('<button class="btn-primary" id="replayBtn">↺ Continuer</button>');
+  p.push('</div></div>');
+  return p.join('');
+}
+
+// ─── EVENTS ───────────────────────────────────────────────────────────────────
+function bindEvents() {
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.onclick = function(){ state.tab = btn.dataset.tab; render(); };
+  });
+  document.querySelectorAll('.filter-btn').forEach(function(btn){
+    btn.onclick = function(){ state.filter = btn.dataset.filter; render(); };
+  });
+  var el;
+  el = document.getElementById('modeToggle');
+  if(el) el.onclick = function(){ state.srMode = !state.srMode; render(); };
+  el = document.getElementById('startBtn');
+  if(el) el.onclick = startQuiz;
+  el = document.getElementById('backBtn');
+  if(el) el.onclick = function(){ state.screen='home'; render(); };
+  document.querySelectorAll('.opt-btn').forEach(function(btn){
+    btn.onclick = function(){ answer(parseInt(btn.dataset.idx)); };
+  });
+  el = document.getElementById('hintBtn');
+  if(el) el.onclick = function(){ state.showHint = !state.showHint; render(); };
+  el = document.getElementById('keysBtn');
+  if(el) el.onclick = function(){ state.showKeys = !state.showKeys; render(); };
+  el = document.getElementById('nextBtn');
+  if(el) el.onclick = next;
+  el = document.getElementById('statsBtn');
+  if(el) el.onclick = function(){ state.screen='home'; state.tab='stats'; render(); };
+  el = document.getElementById('homeBtn');
+  if(el) el.onclick = function(){ state.screen='home'; render(); };
+  el = document.getElementById('replayBtn');
+  if(el) el.onclick = startQuiz;
+  el = document.getElementById('resetBtn');
+  if(el) el.onclick = function(){
+    var div = document.getElementById('resetConfirm');
+    div.innerHTML = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:10px;color:#ff3356">Tout effacer ?</span><button id="confirmYes" style="padding:4px 12px;background:#ff335522;border:1px solid #ff3356;border-radius:14px;color:#ff3356;cursor:pointer;font-family:inherit;font-size:10px">Oui</button><button id="confirmNo" style="padding:4px 12px;background:transparent;border:1px solid #4a688844;border-radius:14px;color:#4a6888;cursor:pointer;font-family:inherit;font-size:10px">Annuler</button></div>';
+    document.getElementById('confirmYes').onclick = function(){ state.srData={}; srSave({}); render(); };
+    document.getElementById('confirmNo').onclick = function(){ render(); };
+  };
+}
+
+// ─── QUIZ ACTIONS ─────────────────────────────────────────────────────────────
+function startQuiz() {
+  var filtered = getFiltered();
+  var pool = state.srMode ? srQueue(filtered, state.srData) : filtered.slice().sort(function(){ return Math.random()-0.5; });
+  if (!pool.length) return;
+  state.current = pool[0];
+  state.queue = pool.slice(1);
+  state.selected = null;
+  state.showResult = false;
+  state.showHint = false;
+  state.showKeys = false;
+  state.score = {ok:0, total:0};
+  state.history = [];
+  state.screen = 'quiz';
+  render();
+}
+
+function answer(idx) {
+  if (state.showResult) return;
+  var ok = idx === state.current.ok;
+  state.selected = idx;
+  state.showResult = true;
+  if(ok) state.score.ok++;
+  state.score.total++;
+  state.history.push({case: state.current, idx:idx, ok:ok});
+  state.srData = srUpdate(state.srData, state.current.id, ok);
+  srSave(state.srData);
+  render();
+}
+
+function next() {
+  if (!state.queue.length) { state.screen='result'; render(); return; }
+  state.current = state.queue[0];
+  state.queue = state.queue.slice(1);
+  state.selected = null;
+  state.showResult = false;
+  state.showHint = false;
+  state.showKeys = false;
+  render();
+}
+
+render();
+
+  </script>
+</body>
+</html>
